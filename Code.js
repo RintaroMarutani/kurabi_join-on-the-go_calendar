@@ -40,9 +40,14 @@ function doGet(e) {
   try {
     const path = e && e.parameter ? e.parameter.path : null;
 
-    // WhatsApp予約ID取得API
+    // WhatsApp予約ID取得API（レガシー: GAS版index.html用）
     if (path === 'whatsapp') {
       return handleWhatsAppRequest(e);
+    }
+
+    // 予約ログ保存API（GitHub Pages版: クライアントサイドからの非同期送信用）
+    if (path === 'log') {
+      return handleLogRequest(e);
     }
 
     // 通常のカレンダー表示
@@ -159,6 +164,34 @@ function handleWhatsAppRequest(e) {
       '</body>' +
       '</html>'
     );
+  }
+}
+
+/**
+ * 予約ログをスプレッドシートに保存するAPIハンドラー
+ * GitHub Pages版のクライアントサイドから sendBeacon で呼び出される
+ *
+ * @param {Object} e - doGet()から渡されるイベントオブジェクト
+ * @returns {TextOutput} 空のJSONレスポンス
+ */
+function handleLogRequest(e) {
+  try {
+    const params = e.parameter;
+    const reservationId = params.reservation_id || '';
+    const utmSource = params.utm_source || '';
+    const utmMedium = params.utm_medium || '';
+    const utmContent = params.utm_content || '';
+
+    if (reservationId) {
+      queueSaveToSpreadsheet(new Date(), reservationId, utmSource, utmMedium, utmContent);
+    }
+
+    return ContentService.createTextOutput(JSON.stringify({ success: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  } catch (error) {
+    Logger.log('ERROR in handleLogRequest: ' + error.toString());
+    return ContentService.createTextOutput(JSON.stringify({ success: false }))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 }
 

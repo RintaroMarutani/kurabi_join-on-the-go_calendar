@@ -1070,7 +1070,8 @@
 
         // WhatsAppボタンの設定（whatsapp.htmlで定義された関数を使用）
         setupWhatsAppButton({
-          apiEndpoint: WHATSAPP_API_ENDPOINT,
+          whatsappNumber: WHATSAPP_NUMBER,
+          logEndpoint: CALENDAR_API_ENDPOINT,
           title: title,
           dateText: dateText,
           timeStr: timeStr,

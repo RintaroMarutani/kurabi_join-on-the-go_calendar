@@ -25,11 +25,11 @@ jobs:
       - name: Generate config.js from Secrets
         env:
           CALENDAR_API_ENDPOINT: ${{ secrets.CALENDAR_API_ENDPOINT }}
-          WHATSAPP_API_ENDPOINT: ${{ secrets.WHATSAPP_API_ENDPOINT }}
+          WHATSAPP_NUMBER: ${{ secrets.WHATSAPP_NUMBER }}
         run: |
           cat > docs/config.js << EOF
           const CALENDAR_API_ENDPOINT = '${CALENDAR_API_ENDPOINT}';
-          const WHATSAPP_API_ENDPOINT = '${WHATSAPP_API_ENDPOINT}';
+          const WHATSAPP_NUMBER = '${WHATSAPP_NUMBER}';
           const SERVER_UTM_SOURCE = '';
           const SERVER_UTM_MEDIUM = '';
           const SERVER_UTM_CONTENT = '';
