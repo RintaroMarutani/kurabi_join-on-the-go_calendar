@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, shrink-to-fit=no">
+  <title>3-Day Vertical Calendar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <script>
+    var _fl = document.createElement('link');
+    _fl.rel = 'stylesheet';
+    _fl.href = 'https://fonts.googleapis.com/css2?family=League+Spartan:wght@400;700&display=swap';
+    document.head.appendChild(_fl);
+  </script>
+
+  <?!= include('styles'); ?>
+</head>
+
+<body>
+
+  <!-- 3-Day Vertical Calendar for STUDIO -->
+  <div id="week-calendar"></div>
+
+  <!-- Event Detail Modal -->
+  <div id="event-modal" class="modal-overlay">
+    <div class="modal-wrapper">
+      <button class="modal-close" id="modal-close">
+        <svg width="30" height="30" viewBox="0 0 30 30">
+          <path d="M8 8 L22 22 M22 8 L8 22" stroke="#1D1E20" stroke-width="4" stroke-linecap="round" />
+        </svg>
+      </button>
+      <div class="modal-content">
+        <div class="modal-header">
+          <div class="modal-icon" id="modal-icon"></div>
+          <h2 class="modal-title" id="modal-title">Event Title</h2>
+        </div>
+
+        <div class="modal-body">
+          <div class="modal-left">
+            <div class="modal-image-container">
+              <img id="modal-image" src="" alt="Event image" loading="lazy">
+              <div class="modal-image-dots">
+                <span class="dot active"></span>
+                <span class="dot"></span>
+                <span class="dot"></span>
+              </div>
+            </div>
+
+            <div class="modal-description">
+              <h3 id="modal-subtitle">Join an authentic experience!</h3>
+              <ul id="modal-details">
+                <li>Experience details will appear here</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="modal-right">
+            <div class="modal-info">
+              <div class="modal-info-item">
+                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" width="36.643" height="46.635"
+                  viewBox="0 0 36.643 46.635">
+                  <path
+                    d="M74.328,64.656a8.328,8.328,0,1,1,8.328-8.328A8.328,8.328,0,0,1,74.328,64.656Zm0-13.324a5,5,0,1,0,5,5A5,5,0,0,0,74.328,51.331Z"
+                    transform="translate(-56.007 -38.007)" fill="#ffa100" />
+                  <path
+                    d="M48.321,58.635,34.27,42.065q-.293-.373-.58-.751A18.136,18.136,0,0,1,30,30.321a18.321,18.321,0,1,1,36.642,0,18.128,18.128,0,0,1-3.689,10.988l0,0s-.5.656-.575.744ZM36.349,39.307s.39.513.478.623L48.321,53.486,59.83,39.911c.073-.092.463-.608.465-.61a14.825,14.825,0,0,0,3.016-8.981,14.99,14.99,0,1,0-29.98,0,14.832,14.832,0,0,0,3.02,8.986Z"
+                    transform="translate(-30 -12)" fill="#ffa100" />
+                </svg>
+                <div class="info-text">
+                  <div id="modal-location">Location</div>
+                  <a href="#" id="modal-maps-link" class="maps-link" target="_blank" rel="noopener noreferrer">Open
+                    Google Maps directions</a>
+                  <div id="modal-maps-container" class="maps-embed-container">
+                    <iframe
+                      id="modal-maps-iframe"
+                      width="100%"
+                      height="300"
+                      style="border:0;"
+                      loading="lazy"
+                      allowfullscreen
+                      referrerpolicy="no-referrer-when-downgrade">
+                    </iframe>
+                  </div>
+                </div>
+              </div>
+
+              <div class="modal-info-item">
+                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" width="37.828" height="40.981"
+                  viewBox="0 0 37.828 40.981">
+                  <path
+                    d="M58.676,15.152h-6.3V12H49.219v3.152H36.609V12H33.457v3.152h-6.3A3.162,3.162,0,0,0,24,18.3V49.828a3.162,3.162,0,0,0,3.152,3.152H58.676a3.162,3.162,0,0,0,3.152-3.152V18.3A3.162,3.162,0,0,0,58.676,15.152Zm0,34.676H27.152V27.762H58.676Zm0-25.219H27.152V18.3h6.3v3.152h3.152V18.3H49.219v3.152h3.152V18.3h6.3Z"
+                    transform="translate(-24 -12)" fill="#ffa100" />
+                </svg>
+                <div class="info-text" id="modal-date">Today</div>
+              </div>
+
+              <div class="modal-info-item">
+                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" width="40.192" height="40.192"
+                  viewBox="0 0 40.192 40.192">
+                  <path
+                    d="M36.1,56.192a20.1,20.1,0,1,1,20.1-20.1A20.1,20.1,0,0,1,36.1,56.192ZM52.173,36.1A16.077,16.077,0,1,0,36.1,52.173,16.077,16.077,0,0,0,52.173,36.1Zm-8.038-2.01a2.01,2.01,0,0,1,0,4.019H38.106a4.031,4.031,0,0,1-4.019-4.019V26.048a2.01,2.01,0,1,1,4.019,0v8.038Z"
+                    transform="translate(-16 -16)" fill="#ffa100" fill-rule="evenodd" />
+                </svg>
+                <div class="info-text" id="modal-time">12:00 - 14:00</div>
+              </div>
+
+              <div class="modal-info-item">
+                <svg class="info-icon" xmlns="http://www.w3.org/2000/svg" width="30.983" height="42.487"
+                  viewBox="0 0 30.983 42.487">
+                  <path
+                    d="M18.2,42.487h-5.19a.954.954,0,0,1-.679-.272.914.914,0,0,1-.287-.694V31.564H3.35a.954.954,0,0,1-.679-.272.914.914,0,0,1-.287-.694V27.49a.979.979,0,0,1,.966-.966H12.04V23.96H3.35a.954.954,0,0,1-.679-.272.914.914,0,0,1-.287-.694V19.856a.979.979,0,0,1,.966-.966H9.807L.121,1.448a1.026,1.026,0,0,1,0-.966A.946.946,0,0,1,.966,0H6.82a.952.952,0,0,1,.875.543l6.488,12.825q.573,1.147,1.69,3.772.3-.724.92-2.052t.83-1.841L23.386.573A.875.875,0,0,1,24.261,0h5.764a.922.922,0,0,1,.815.483.913.913,0,0,1,.03.935L21.425,18.89h6.488a.979.979,0,0,1,.966.966v3.138a.914.914,0,0,1-.287.694.954.954,0,0,1-.679.272H19.162v2.565h8.751a.979.979,0,0,1,.966.966V30.6a.914.914,0,0,1-.287.694.954.954,0,0,1-.679.272H19.162v9.958a.979.979,0,0,1-.966.966Z"
+                    fill="#ffa100" />
+                </svg>
+                <div class="info-text" id="modal-price">3,000 per person</div>
+              </div>
+            </div>
+
+            <a
+              class="modal-whatsapp-button"
+              id="modal-whatsapp"
+              href="#"
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label="Send a booking request via WhatsApp"
+            >
+              <span class="wa-icon-wrap" aria-hidden="true">
+                <svg class="wa-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                  <path fill="#ffffff" d="M20.52 3.48A11.94 11.94 0 0 0 12.01 0C5.39 0 .02 5.37.02 12c0 2.11.55 4.2 1.6 6.04L0 24l6.13-1.59A11.93 11.93 0 0 0 12 24c6.63 0 12-5.37 12-12 0-3.2-1.25-6.21-3.48-8.52ZM12 21.8c-1.92 0-3.79-.51-5.43-1.48l-.39-.23-3.64.95.97-3.55-.25-.41A9.78 9.78 0 0 1 2.2 12C2.2 6.65 6.65 2.2 12 2.2S21.8 6.65 21.8 12 17.35 21.8 12 21.8Zm5.42-6.67c-.3-.15-1.76-.86-2.04-.96-.27-.1-.47-.15-.67.15-.2.29-.77.96-.95 1.16-.18.19-.35.22-.65.07-.3-.15-1.28-.47-2.44-1.5-.9-.8-1.5-1.78-1.68-2.08-.17-.29-.02-.45.13-.6.13-.13.3-.35.45-.52.15-.17.2-.29.3-.49.1-.2.05-.37-.02-.52-.07-.15-.67-1.6-.92-2.2-.24-.58-.49-.5-.67-.5h-.57c-.2 0-.52.07-.79.37-.27.29-1.05 1.02-1.05 2.5 0 1.47 1.08 2.89 1.23 3.09.15.2 2.12 3.24 5.14 4.54.72.31 1.29.49 1.73.62.73.23 1.4.2 1.93.12.59-.09 1.76-.72 2.01-1.41.25-.69.25-1.28.17-1.41-.07-.12-.27-.2-.57-.35Z"/>
+                </svg>
+              </span>
+              <span class="wa-label">Send a booking request via WhatsApp</span>
+            </a>
+
+            <button class="modal-back-button" id="modal-back">
+              <div class="modal-back-icon">
+                <svg xmlns="http://www.w3.org/2000/svg" height="30px" viewBox="0 -960 960 960" width="30px" fill="#FAA12D"
+                  style="transform: scaleX(-1);">
+                  <path
+                    d="M647-440H200q-17 0-28.5-11.5T160-480q0-17 11.5-28.5T200-520h447L451-716q-12-12-11.5-28t12.5-28q12-11 28-11.5t28 11.5l264 264q6 6 8.5 13t2.5 15q0 8-2.5 15t-8.5 13L508-188q-11 11-27.5 11T452-188q-12-12-12-28.5t12-28.5l195-195Z" />
+                </svg>
+              </div>
+              Back to calendar
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- APIエンドポイントをスクリプトプロパティから設定 -->
+  <script>
+    const CALENDAR_API_ENDPOINT = '<?= getCalendarApiEndpoint() ?>';
+    const WHATSAPP_API_ENDPOINT = '<?= getWhatsAppEndpoint() ?>';
+
+    // UTMパラメータ（サーバーサイドから取得）
+    const SERVER_UTM_SOURCE = '<?= utmSource ?>';
+    const SERVER_UTM_MEDIUM = '<?= utmMedium ?>';
+    const SERVER_UTM_CONTENT = '<?= utmContent ?>';
+  </script>
+
+  <?!= include('whatsapp'); ?>
+  <?!= include('scripts'); ?>
+
+</body>
+
+</html>

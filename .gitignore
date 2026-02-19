@@ -1,0 +1,10 @@
+.DS_Store
+backup_*/
+*.backup
+whatsapp-performance-review.txt
+
+# clasp設定（スクリプトID含む）
+.clasp.json
+
+# GitHub Pages設定ファイル（APIエンドポイント等の秘匿情報）
+docs/config.js

@@ -1,0 +1,42 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate config.js from Secrets
+        run: |
+          cat > docs/config.js << 'SCRIPT'
+          const CALENDAR_API_ENDPOINT = '${{ secrets.CALENDAR_API_ENDPOINT }}';
+          const WHATSAPP_API_ENDPOINT = '${{ secrets.WHATSAPP_API_ENDPOINT }}';
+          const SERVER_UTM_SOURCE = '';
+          const SERVER_UTM_MEDIUM = '';
+          const SERVER_UTM_CONTENT = '';
+          SCRIPT
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs
+
+      - id: deployment
+        uses: actions/deploy-pages@v4

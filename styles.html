@@ -1,0 +1,1074 @@
+<style>
+    *, button {
+      box-sizing: border-box;
+    }
+
+    button {
+      font-family: inherit;
+    }
+
+    :root {
+      --hour-h: 60px;
+      --bg-today: #F5EFE2;
+      --bg-today-past: #F7EFE1;
+      --bg-today-future: #F8DDAF;
+      --bg-day1: #B0DCCE;
+      --bg-day2: #DFEDE9;
+      --color-today: #FFA100;
+      --color-green: #2D9F71;
+      --event-active: #2D9F71;
+      --event-inactive: #9A9A9A;
+      --event-text: #FFFFFF;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background: transparent;
+      overflow-x: hidden;
+      font-family: 'League Spartan', sans-serif;
+    }
+
+    .cal-container {
+      padding: 20px 70px 20px 0;
+    }
+
+    .cal-times__header {
+      padding: 20px;
+      min-height: 77.6px;
+    }
+
+    .cal-day__header {
+      padding: 20px;
+      font-weight: 600;
+      font-size: clamp(18px, 2.5vw, 32px);
+      text-align: center;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      height: 77.6px;
+      white-space: nowrap;
+    }
+
+    .cal-day__header--today {
+      color: var(--color-today);
+    }
+
+    .cal-day__header--other {
+      color: var(--color-green);
+    }
+
+    .cal-day__content {
+      position: relative;
+      min-height: calc(var(--hour-h) * 15.5);
+      flex: 1;
+      padding: 20px 0;
+      z-index: 21;
+    }
+
+    .cal-loading {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      text-align: center;
+      z-index: 100;
+    }
+
+    .cal-loading__spinner {
+      width: 50px;
+      height: 50px;
+      border: 4px solid #e5e5e5;
+      border-top-color: var(--color-green);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 12px;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    .cal-body {
+      display: grid;
+      grid-template-columns: 70px 1fr;
+    }
+
+    .cal-days {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto 1fr;
+      column-gap: 30px;
+      align-items: stretch;
+    }
+
+    .cal-times {
+      display: flex;
+      flex-direction: column;
+      z-index: 10;
+    }
+
+    .cal-times__body {
+      position: relative;
+      min-height: calc(var(--hour-h) * 15.5);
+      flex: 1;
+      padding: 30px 0;
+    }
+
+    .cal-time-icon {
+      position: absolute;
+      left: 35%;
+      transform: translate(-50%, -50%);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .cal-time-icon--timeOfDay {
+      width: 45px;
+      height: 45px;
+      left: 100%;
+      transform: translate(-50%, -50%);
+    }
+
+    .cal-time-icon img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .cal-day__body {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      padding: 30px;
+      flex: 1;
+    }
+
+    .cal-day--today {
+      background: var(--bg-today);
+    }
+
+    .cal-day--day1 {
+      background: var(--bg-day1);
+    }
+
+    .cal-day--day2 {
+      background: var(--bg-day2);
+    }
+
+    .cal-day__mobile-border {
+      display: none;
+    }
+
+    .cal-line--noon {
+      position: absolute;
+      left: -30px;
+      right: 0;
+      height: 2px;
+      background: repeating-linear-gradient(to right,
+          rgba(26, 26, 26, 0.5) 0,
+          rgba(26, 26, 26, 0.5) 10px,
+          transparent 10px,
+          transparent 20px);
+      border: none;
+      z-index: 1;
+    }
+
+    .cal-event {
+      position: absolute;
+      left: 0;
+      right: 0;
+      background: var(--event-active);
+      padding: 16px 20px;
+      border-radius: 2px;
+      transition: transform 0.2s;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      min-height: 80px;
+      z-index: 21;
+      /* タッチ最適化: 300msの遅延を削減 */
+      touch-action: manipulation;
+    }
+
+    .cal-event__spots {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      background: #FFFFFF;
+      color: var(--color-green);
+      padding: 0 16px;
+      border-radius: 8px 8px 0 0;
+      font-size: 14px;
+      font-weight: 400;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      z-index: 22;
+      white-space: nowrap;
+      line-height: 1;
+      height: 30px;
+      max-width: calc(100% - 4px);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .cal-event__spots svg {
+      width: 20px;
+      height: 20px;
+      fill: var(--color-green);
+      flex-shrink: 0;
+    }
+
+    /* デスクトップのみでhoverエフェクトを有効化（モバイルでは不要） */
+    @media (min-width: 769px) {
+      .cal-event:hover {
+        z-index: 1000 !important;
+        transform: scale(1.1);
+      }
+
+      .cal-event:hover .cal-event__icon {
+        transform: scale(1.2);
+      }
+
+      .cal-event:hover:not(.cal-event--inactive) {
+        background: #FAA12D;
+      }
+    }
+
+    .cal-event--inactive {
+      background: var(--event-inactive);
+    }
+
+    .cal-event--inactive .cal-event__spots {
+      background: #BEBEBE;
+      color: #E3E3E3;
+    }
+
+    .cal-event--inactive .cal-event__spots svg {
+      fill: #E3E3E3;
+    }
+
+    .cal-event--inactive .cal-event__title,
+    .cal-event--inactive .cal-event__time {
+      color: #BEBEBE;
+    }
+
+    .cal-event--inactive .cal-event__icon svg path {
+      fill: #BEBEBE;
+    }
+
+    .cal-event__icon {
+      flex: 1;
+      width: auto;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.2s;
+    }
+
+    .cal-event__icon svg {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .cal-event__icon svg path {
+      fill: white;
+    }
+
+    .cal-event__content {
+      flex: 2;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .cal-event__title {
+      font-weight: 700;
+      font-size: 18px;
+      color: var(--event-text);
+      line-height: 1.3;
+    }
+
+    .cal-event__time {
+      font-size: 16px;
+      color: var(--event-text);
+      opacity: 0.9;
+    }
+
+    .cal-event--small {
+      min-height: 60px;
+      padding: 12px 16px;
+    }
+
+    .cal-event--small .cal-event__icon {
+      width: auto;
+      height: 100%;
+    }
+
+    .cal-event--small .cal-event__title {
+      font-size: 12px;
+    }
+
+    .cal-event--small .cal-event__time {
+      font-size: 11px;
+    }
+
+    .cal-event--small .cal-event__spots {
+      font-size: 12px;
+      padding: 0 12px;
+    }
+
+    .cal-event--small .cal-event__spots svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .cal-event--tiny {
+      min-height: 50px;
+      padding: 10px 12px;
+      gap: 12px;
+    }
+
+    .cal-event--tiny .cal-event__icon {
+      width: auto;
+      height: 100%;
+    }
+
+    .cal-event--tiny .cal-event__title {
+      font-size: 11px;
+    }
+
+    .cal-event--tiny .cal-event__time {
+      font-size: 10px;
+    }
+
+    .cal-event--tiny .cal-event__spots {
+      font-size: 11px;
+      padding: 0 10px;
+    }
+
+    .cal-event--tiny .cal-event__spots svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .cal-event--narrow {
+      padding: 12px 14px;
+      gap: 8px;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .cal-event--narrow .cal-event__icon {
+      width: 50%;
+      height: 100%;
+    }
+
+    .cal-event--narrow .cal-event__content {
+      align-items: flex-start;
+    }
+
+    .cal-event--narrow .cal-event__title {
+      font-size: 13px;
+      line-height: 1.3;
+    }
+
+    .cal-event--narrow .cal-event__time {
+      font-size: 11px;
+      line-height: 1.3;
+    }
+
+    .cal-event--narrow .cal-event__spots {
+      font-size: 12px;
+      padding: 0 12px;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
+
+    .cal-event--narrow .cal-event__spots svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .cal-event--very-narrow {
+      padding: 10px 8px;
+      gap: 6px;
+      flex-direction: column;
+      align-items: flex-start;
+      text-align: left;
+    }
+
+    .cal-event--very-narrow .cal-event__icon {
+      width: auto;
+      height: 100%;
+    }
+
+    .cal-event--very-narrow .cal-event__content {
+      align-items: flex-start;
+    }
+
+    .cal-event--very-narrow .cal-event__title {
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .cal-event--very-narrow .cal-event__time {
+      font-size: 10px;
+      line-height: 1.3;
+    }
+
+    .cal-event--very-narrow .cal-event__spots {
+      font-size: 10px;
+      padding: 0 8px;
+      left: 50%;
+      right: auto;
+      transform: translateX(-50%);
+    }
+
+    .cal-event--very-narrow .cal-event__spots svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.95);
+      z-index: 2147483647;
+      align-items: flex-start;
+      justify-content: center;
+      opacity: 0;
+      transition: opacity 0.3s ease-in-out;
+      padding-top: 40px;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-wrapper {
+      position: relative;
+      max-width: 1000px;
+      width: 90%;
+    }
+
+    .modal-content {
+      position: relative;
+      background: #1D1E20;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 60px;
+      transform: scale(0.9);
+      opacity: 0;
+      transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .modal-overlay.active .modal-content {
+      transform: scale(1);
+      opacity: 1;
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -12px;
+      right: -12px;
+      background: #FAA12D;
+      border: none;
+      cursor: pointer;
+      padding: 0;
+      z-index: 10001;
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      /* タッチ最適化: 300msの遅延を削減 */
+      touch-action: manipulation;
+    }
+
+    .modal-close:hover {
+      opacity: 0.9;
+    }
+
+    .modal-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      color: white;
+      align-items: start;
+    }
+
+    .modal-left {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-end;
+      gap: 30px;
+      width: 100%;
+    }
+
+    .modal-icon {
+      width: 80px;
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-icon svg {
+      max-width: 100%;
+      max-height: 100%;
+    }
+
+    .modal-icon svg path {
+      fill: #FAA12D;
+    }
+
+    .modal-title {
+      font-size: 30px;
+      font-weight: 700;
+      margin: 0;
+      color: white;
+    }
+
+    .modal-image-container {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #1a1a1a;
+    }
+
+    .modal-image-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      transition: opacity 0.5s ease-in-out;
+      opacity: 1;
+    }
+
+    .modal-image-container img.loading {
+      opacity: 0.5;
+    }
+
+    .modal-image-container img.fade-out {
+      opacity: 0;
+    }
+
+    .modal-image-dots {
+      position: absolute;
+      bottom: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+
+    .modal-image-dots .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.5);
+      cursor: pointer;
+    }
+
+    .modal-image-dots .dot.active {
+      background: white;
+    }
+
+    .modal-description h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: #FAA12D;
+      margin: 0 0 20px 0;
+    }
+
+    .modal-description ul {
+      list-style: disc;
+      padding-left: 20px;
+      margin: 0;
+    }
+
+    .modal-description li {
+      font-size: 16px;
+      line-height: 1.6;
+      margin-bottom: 10px;
+      color: white;
+    }
+
+    .modal-right {
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .modal-info {
+      display: flex;
+      flex-direction: column;
+      gap: 30px;
+    }
+
+    .modal-info-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 30px;
+    }
+
+    .info-icon {
+      width: 32px;
+      height: 32px;
+      flex-shrink: 0;
+    }
+
+    .info-text {
+      font-size: 20px;
+      color: white;
+      line-height: 1.4;
+    }
+
+    .maps-link {
+      display: block;
+      font-size: 16px;
+      color: #3096B2;
+      text-decoration: underline;
+      margin-top: 5px;
+    }
+
+    .maps-link:hover {
+      text-decoration: underline;
+    }
+
+    .maps-embed-container {
+      margin-top: 15px;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .maps-embed-container iframe {
+      display: block;
+    }
+
+    .modal-whatsapp-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 8px 12px;
+      border-radius: 10px;
+      text-decoration: none;
+      background: #25D366;
+      color: #ffffff;
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+      box-shadow: 0 6px 20px rgba(0,0,0,.18);
+      transition: transform .08s ease, box-shadow .2s ease, filter .2s ease;
+      font-family: 'League Spartan', sans-serif;
+      min-height: 60px;
+      width: 100%;
+      border: none;
+      cursor: pointer;
+      /* タッチ最適化: 300msの遅延を削減 */
+      touch-action: manipulation;
+    }
+
+    .modal-whatsapp-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 10px 24px rgba(0,0,0,.22);
+    }
+
+    .modal-whatsapp-button:active {
+      transform: translateY(0);
+      filter: brightness(.96);
+    }
+
+    .modal-whatsapp-button:focus-visible {
+      outline: 3px solid rgba(255,255,255,.6);
+      outline-offset: 2px;
+    }
+
+    .wa-icon-wrap {
+      width: 56px;
+      height: 56px;
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+    }
+
+    .wa-icon {
+      width: 36px;
+      height: 36px;
+    }
+
+    .wa-label {
+      text-align: left;
+    }
+
+    .modal-back-button {
+      display: none;
+      background: #FAA12D;
+      color: #1D1E20;
+      border: none;
+      padding: 20px 30px;
+      font-size: 20px;
+      font-weight: 400;
+      cursor: pointer;
+      align-items: center;
+      justify-content: flex-start;
+      gap: 15px;
+      font-family: 'League Spartan', sans-serif;
+      margin-top: 20px;
+      /* タッチ最適化: 300msの遅延を削減 */
+      touch-action: manipulation;
+    }
+
+    .modal-back-button:hover {
+      background: #e69000;
+    }
+
+    .modal-back-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: #1D1E20;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .mobile-nav {
+      display: none;
+    }
+
+    @media (max-width: 768px) {
+      :root {
+        --hour-h: 60px;
+      }
+
+      .cal-container {
+        padding: 20px 40px 20px 0;
+      }
+
+      .mobile-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 20px 40px 20px 0;
+        margin-left: 40px;
+        background: transparent;
+        max-width: 100%;
+        width: 100%;
+        box-sizing: border-box;
+      }
+
+      .mobile-nav__button {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: #FFA100;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.2s;
+        /* タッチ最適化: 300msの遅延を削減 */
+        touch-action: manipulation;
+      }
+
+      .mobile-nav__button:disabled {
+        visibility: hidden;
+      }
+
+      .mobile-nav__button svg {
+        width: 24px;
+        height: 24px;
+      }
+
+      .mobile-nav__date {
+        background: #1A1A1A;
+        color: white;
+        padding: 12px 32px;
+        font-size: 24px;
+        font-weight: 700;
+        text-align: center;
+      }
+
+      .cal-body {
+        grid-template-columns: 40px 1fr;
+        max-width: 100%;
+        width: 100%;
+      }
+
+      .cal-days {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+      }
+
+      .cal-times__header {
+        display: none;
+      }
+
+      .cal-day__header,
+      .cal-day__body {
+        display: none;
+      }
+
+      .cal-day__body.active {
+        display: flex;
+      }
+
+      .cal-times__body {
+        padding: 30px 0;
+      }
+
+      .cal-day__body {
+        padding: 24px;
+      }
+
+      .cal-day__mobile-border {
+        display: block;
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        z-index: 20;
+      }
+
+      .cal-day--today .cal-day__mobile-border {
+        background: #FFA100;
+      }
+
+      .cal-day--day1 .cal-day__mobile-border,
+      .cal-day--day2 .cal-day__mobile-border {
+        background: #2D9F71;
+      }
+
+      .cal-day--day1~.cal-times .cal-time-icon img,
+      .cal-day--day2~.cal-times .cal-time-icon img {
+        filter: grayscale(100%);
+      }
+
+      .cal-line--noon {
+        left: 0;
+      }
+
+      .cal-time-icon {
+        width: 28px;
+        height: 28px;
+        left: 50%;
+      }
+
+      .cal-time-icon--timeOfDay {
+        width: 38px;
+        height: 38px;
+        left: 100%;
+        transform: translate(-50%, -50%);
+      }
+
+      .cal-time-icon--night {
+        width: 30px;
+        height: 30px;
+      }
+
+      body.mobile-view-day1 .cal-time-icon img,
+      body.mobile-view-day2 .cal-time-icon img {
+        filter: brightness(0) saturate(100%) invert(58%) sepia(12%) saturate(767%) hue-rotate(108deg) brightness(93%) contrast(86%);
+      }
+
+      body.mobile-view-day1 .cal-time-icon--timeOfDay svg path,
+      body.mobile-view-day2 .cal-time-icon--timeOfDay svg path {
+        fill: #7F9D93 !important;
+      }
+
+      body.mobile-view-day1 .cal-time-icon:not(.cal-time-icon--timeOfDay),
+      body.mobile-view-day2 .cal-time-icon:not(.cal-time-icon--timeOfDay) {
+        display: none;
+      }
+
+      .modal-overlay {
+        align-items: flex-start;
+        padding-top: 0;
+      }
+
+      .modal-wrapper {
+        width: 100%;
+        max-width: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .modal-content {
+        padding: 30px;
+        width: 100%;
+        height: auto;
+        max-height: 100vh;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+      }
+
+      .modal-close {
+        display: none;
+      }
+
+      .modal-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 15px;
+        padding: 0;
+      }
+
+      .modal-body {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+        flex: 1;
+      }
+
+      .modal-title {
+        font-size: 20px;
+      }
+
+      .modal-icon {
+        width: 50px;
+        height: 50px;
+      }
+
+      .modal-image-container {
+        order: 1;
+        aspect-ratio: 2 / 1;
+        overflow: hidden;
+      }
+
+      .modal-image-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .modal-left {
+        display: contents;
+      }
+
+      .modal-right {
+        display: contents;
+      }
+
+      .modal-info {
+        order: 2;
+        gap: 15px;
+      }
+
+      .modal-info-item {
+        gap: 15px;
+      }
+
+      .info-icon {
+        width: 24px;
+        height: 24px;
+      }
+
+      .info-text {
+        font-size: 16px;
+        line-height: 1.3;
+      }
+
+      .modal-description {
+        order: 3;
+      }
+
+      .modal-description h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+      }
+
+      .modal-description ul {
+        columns: 2;
+        column-gap: 15px;
+        list-style-position: outside;
+        padding-left: 18px;
+      }
+
+      .modal-description li {
+        font-size: 13px;
+        line-height: 1.4;
+        margin-bottom: 6px;
+        break-inside: avoid;
+        padding-left: 4px;
+      }
+
+      .modal-whatsapp-button {
+        order: 4;
+        width: 100%;
+        padding: 6px 10px;
+        font-size: 14px;
+        min-height: 45px;
+      }
+
+      .wa-icon-wrap {
+        width: 40px;
+        height: 40px;
+      }
+
+      .wa-icon {
+        width: 28px;
+        height: 28px;
+      }
+
+      .modal-back-button {
+        display: flex;
+        width: auto;
+        padding: 12px 20px 12px 20px;
+        font-size: 18px;
+        margin-top: 0;
+        margin-left: -20px;
+        justify-content: flex-start;
+        color: #1D1E20;
+        gap: 15px;
+        align-self: flex-start;
+        order: 5;
+      }
+
+      .modal-back-icon {
+        width: 40px;
+        height: 40px;
+      }
+
+      .maps-embed-container {
+        margin-top: 10px;
+      }
+
+      .maps-embed-container iframe {
+        height: 200px;
+      }
+    }
+  </style>
