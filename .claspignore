@@ -17,6 +17,9 @@ docs/**
 # GitHub Actions
 .github/**
 
+# Git関連
+.gitignore
+
 # システムファイル
 .DS_Store
 **/.DS_Store

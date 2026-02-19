@@ -153,6 +153,17 @@
           return;
         }
 
+        // origin検証: 自身と同一オリジン、または親ページからのメッセージのみ許可
+        try {
+          const allowedOrigin = window.location.origin;
+          const referrerOrigin = document.referrer ? new URL(document.referrer).origin : null;
+          if (event.origin !== allowedOrigin && event.origin !== referrerOrigin) {
+            return;
+          }
+        } catch (e) {
+          return;
+        }
+
         // UTM_PARAMSタイプのメッセージを処理
         if (event.data.type === 'UTM_PARAMS') {
           window.receivedUTMParams = {
@@ -204,6 +215,26 @@
         const d = String(getJSTDate(date)).padStart(2, '0');
         const m = String(getJSTMonth(date) + 1).padStart(2, '0');
         return wd + ' ' + d + '/' + m;
+      };
+
+      // HTMLエスケープ関数（XSS対策）
+      const escapeHTML = (str) => {
+        if (!str) return '';
+        return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+      };
+
+      // SVGサニタイズ関数（script/イベントハンドラを除去）
+      const sanitizeSVG = (svgStr) => {
+        if (!svgStr) return '';
+        const div = document.createElement('div');
+        div.innerHTML = svgStr;
+        div.querySelectorAll('script').forEach(el => el.remove());
+        div.querySelectorAll('*').forEach(el => {
+          for (const attr of [...el.attributes]) {
+            if (attr.name.startsWith('on')) el.removeAttribute(attr.name);
+          }
+        });
+        return div.innerHTML;
       };
 
       const root = document.getElementById('week-calendar');
@@ -480,7 +511,7 @@
           // fetchがcatchされた場合（ネットワークエラー等）
           const warn = document.createElement('div');
           warn.style.color = '#b91c1c'; warn.style.margin = '10px 0'; warn.style.padding = '12px';
-          warn.textContent = 'データ取得に失敗しました。公開設定/CORSをご確認ください。';
+          warn.textContent = 'Failed to load data. Please check your connection and try again.';
           root.insertBefore(warn, container);
         } else {
           items = fetchResult;
@@ -488,7 +519,7 @@
       } catch (e) {
         const warn = document.createElement('div');
         warn.style.color = '#b91c1c'; warn.style.margin = '10px 0'; warn.style.padding = '12px';
-        warn.textContent = 'データ取得に失敗しました。公開設定/CORSをご確認ください。';
+        warn.textContent = 'Failed to load data. Please check your connection and try again.';
         root.insertBefore(warn, container);
       } finally {
         if (loading.parentNode) {
@@ -578,7 +609,7 @@
 
           if (eventIconSvg && eventIconSvg.trim() !== '') {
             iconHtml = '<div class="cal-event__icon">' +
-            eventIconSvg +
+            sanitizeSVG(eventIconSvg) +
           '</div>';
             hasIcon = true;
           }
@@ -586,7 +617,7 @@
           let spotsHtml = '';
           if (remainingSpots !== undefined && remainingSpots !== null && remainingSpots !== '') {
             spotsHtml = '<div class="cal-event__spots">' +
-            'Remaining spots: ' + remainingSpots +
+            'Remaining spots: ' + escapeHTML(remainingSpots) +
             '<svg viewBox="0 0 24 24">' +
               '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' +
             '</svg>' +
@@ -596,8 +627,8 @@
           card.innerHTML = spotsHtml +
         iconHtml +
         '<div class="cal-event__content">' +
-          '<div class="cal-event__title">' + title + '</div>' +
-          '<div class="cal-event__time">' + timeStr + '</div>' +
+          '<div class="cal-event__title">' + escapeHTML(title) + '</div>' +
+          '<div class="cal-event__time">' + escapeHTML(timeStr) + '</div>' +
         '</div>';
 
           card.addEventListener('click', () => {
@@ -814,7 +845,7 @@
 
         const modalIcon = document.getElementById('modal-icon');
         if (eventIconSvg && eventIconSvg.trim() !== '') {
-          modalIcon.innerHTML = eventIconSvg;
+          modalIcon.innerHTML = sanitizeSVG(eventIconSvg);
           modalIcon.style.display = '';
         } else {
           modalIcon.style.display = 'none';
@@ -885,7 +916,7 @@
         }
 
         if (detailItems.length > 0) {
-          detailsList.innerHTML = detailItems.map(item => '<li>' + item + '</li>').join('');
+          detailsList.innerHTML = detailItems.map(item => '<li>' + escapeHTML(item) + '</li>').join('');
         } else {
           detailsList.innerHTML = '<li>Experience details will appear here</li>';
         }
@@ -894,9 +925,9 @@
         const photo2Url = g(eventData, '写真2');
         const photo3Url = g(eventData, '写真3');
 
-        const photo1 = convertDriveLink(photo1Url, 800);
-        const photo2 = convertDriveLink(photo2Url, 800);
-        const photo3 = convertDriveLink(photo3Url, 800);
+        const photo1 = convertDriveLink(photo1Url);
+        const photo2 = convertDriveLink(photo2Url);
+        const photo3 = convertDriveLink(photo3Url);
 
         const photos = [];
         const originalUrls = [];
