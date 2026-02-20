@@ -14,7 +14,7 @@
     document.head.appendChild(_fl);
   </script>
 
-  <?!= include('styles'); ?>
+  <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
@@ -148,19 +148,9 @@
     </div>
   </div>
 
-  <!-- APIエンドポイントをスクリプトプロパティから設定 -->
-  <script>
-    const CALENDAR_API_ENDPOINT = '<?= getCalendarApiEndpoint() ?>';
-    const WHATSAPP_API_ENDPOINT = '<?= getWhatsAppEndpoint() ?>';
-
-    // UTMパラメータ（サーバーサイドから取得）
-    const SERVER_UTM_SOURCE = '<?= utmSource ?>';
-    const SERVER_UTM_MEDIUM = '<?= utmMedium ?>';
-    const SERVER_UTM_CONTENT = '<?= utmContent ?>';
-  </script>
-
-  <?!= include('whatsapp'); ?>
-  <?!= include('scripts'); ?>
+  <script src="config.js"></script>
+  <script src="whatsapp.js"></script>
+  <script src="scripts.js"></script>
 
 </body>
 

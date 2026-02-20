@@ -1,4 +1,3 @@
-<script>
     (async () => {
       // APIエンドポイントはindex.htmlで定義されたグローバル変数を使用
       const API_ENDPOINT = CALENDAR_API_ENDPOINT;
@@ -154,7 +153,7 @@
           return;
         }
 
-        // オリジン検証（XSS対策）
+        // origin検証: 自身と同一オリジン、または親ページからのメッセージのみ許可
         try {
           const allowedOrigin = window.location.origin;
           const referrerOrigin = document.referrer ? new URL(document.referrer).origin : null;
@@ -512,7 +511,7 @@
           // fetchがcatchされた場合（ネットワークエラー等）
           const warn = document.createElement('div');
           warn.style.color = '#b91c1c'; warn.style.margin = '10px 0'; warn.style.padding = '12px';
-          warn.textContent = 'データ取得に失敗しました。公開設定/CORSをご確認ください。';
+          warn.textContent = 'Failed to load data. Please check your connection and try again.';
           root.insertBefore(warn, container);
         } else {
           items = fetchResult;
@@ -520,7 +519,7 @@
       } catch (e) {
         const warn = document.createElement('div');
         warn.style.color = '#b91c1c'; warn.style.margin = '10px 0'; warn.style.padding = '12px';
-        warn.textContent = 'データ取得に失敗しました。公開設定/CORSをご確認ください。';
+        warn.textContent = 'Failed to load data. Please check your connection and try again.';
         root.insertBefore(warn, container);
       } finally {
         if (loading.parentNode) {
@@ -1071,7 +1070,8 @@
 
         // WhatsAppボタンの設定（whatsapp.htmlで定義された関数を使用）
         setupWhatsAppButton({
-          apiEndpoint: WHATSAPP_API_ENDPOINT,
+          whatsappNumber: WHATSAPP_NUMBER,
+          logEndpoint: LOG_API_ENDPOINT,
           title: title,
           dateText: dateText,
           timeStr: timeStr,
@@ -1125,4 +1125,3 @@
       });
 
     })();
-  </script>
