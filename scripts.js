@@ -981,9 +981,10 @@
           modal.scrollTop = 0;
           const modalContent = modal.querySelector('.modal-content');
           modalContent.scrollTop = 0;
-          const modalHeader = modal.querySelector('.modal-header');
-          if (modalHeader) {
-            modalHeader.scrollIntoView({ block: 'start' });
+
+          // 親ページ（STUDIO）にiframeの先頭へスクロールするよう依頼
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'SCROLL_TO_IFRAME' }, '*');
           }
 
           requestAnimationFrame(() => {
