@@ -183,9 +183,11 @@
       position: absolute;
       left: 0;
       right: 0;
+      box-sizing: border-box;
+      border-top: 2px solid rgba(0,0,0,0.12);
       background: var(--event-active);
       padding: 16px 20px;
-      border-radius: 2px;
+      border-radius: 4px;
       transition: transform 0.2s;
       cursor: pointer;
       display: flex;

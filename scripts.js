@@ -2,11 +2,31 @@
       // APIエンドポイントはindex.htmlで定義されたグローバル変数を使用
       const API_ENDPOINT = CALENDAR_API_ENDPOINT;
 
-      // fetchを即座にPromiseとして開始（awaitしない）
-      // スケルトンUI構築と並行してデータ取得を進める
-      const _fetchPromise = fetch(API_ENDPOINT, { cache: 'default', mode: 'cors' })
+      // stale-while-revalidate: キャッシュがあれば即返し、裏でAPI更新
+      const CACHE_KEY = 'cal_data';
+      const CACHE_TIME_KEY = 'cal_data_ts';
+      const CACHE_TTL = 30 * 60 * 1000; // 30分
+
+      let _cachedItems = null;
+      try {
+        const ts = localStorage.getItem(CACHE_TIME_KEY);
+        const raw = localStorage.getItem(CACHE_KEY);
+        if (ts && raw && (Date.now() - parseInt(ts, 10)) < CACHE_TTL) {
+          _cachedItems = JSON.parse(raw);
+        }
+      } catch (_) {}
+
+      // APIフェッチを常に開始（キャッシュ有無に関わらず裏で更新）
+      const _fetchPromise = fetch(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' })
         .then(res => res.json())
-        .then(json => (json && Array.isArray(json.data)) ? json.data : [])
+        .then(json => {
+          const data = (json && Array.isArray(json.data)) ? json.data : [];
+          try {
+            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+            localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+          } catch (_) {}
+          return data;
+        })
         .catch(() => null);
 
       const HOUR_H = 60;
@@ -503,27 +523,31 @@
       loading.innerHTML = '<div class="cal-loading__spinner"></div>';
       container.appendChild(loading);
 
-      // IIFE冒頭で開始したfetchの結果をここでawait（スケルトンUI構築済み）
+      // キャッシュがあれば即座に使用、なければfetchを待つ
       let items = [];
-      try {
-        const fetchResult = await _fetchPromise;
-        if (fetchResult === null) {
-          // fetchがcatchされた場合（ネットワークエラー等）
+      if (_cachedItems && _cachedItems.length > 0) {
+        // キャッシュヒット: 即座に表示（ローディング解除）
+        items = _cachedItems;
+        if (loading.parentNode) loading.parentNode.removeChild(loading);
+      } else {
+        // キャッシュなし: fetchの完了を待つ
+        try {
+          const fetchResult = await _fetchPromise;
+          if (fetchResult === null) {
+            const warn = document.createElement('div');
+            warn.style.color = '#b91c1c'; warn.style.margin = '10px 0'; warn.style.padding = '12px';
+            warn.textContent = 'Failed to load data. Please check your connection and try again.';
+            root.insertBefore(warn, container);
+          } else {
+            items = fetchResult;
+          }
+        } catch (e) {
           const warn = document.createElement('div');
           warn.style.color = '#b91c1c'; warn.style.margin = '10px 0'; warn.style.padding = '12px';
           warn.textContent = 'Failed to load data. Please check your connection and try again.';
           root.insertBefore(warn, container);
-        } else {
-          items = fetchResult;
-        }
-      } catch (e) {
-        const warn = document.createElement('div');
-        warn.style.color = '#b91c1c'; warn.style.margin = '10px 0'; warn.style.padding = '12px';
-        warn.textContent = 'Failed to load data. Please check your connection and try again.';
-        root.insertBefore(warn, container);
-      } finally {
-        if (loading.parentNode) {
-          loading.parentNode.removeChild(loading);
+        } finally {
+          if (loading.parentNode) loading.parentNode.removeChild(loading);
         }
       }
 
