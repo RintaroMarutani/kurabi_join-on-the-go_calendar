@@ -976,6 +976,11 @@
         const showModal = () => {
           modal.style.display = 'flex';
           modal.offsetHeight;
+
+          // モーダルのスクロール位置をタイトル（先頭）にリセット
+          const modalContent = modal.querySelector('.modal-content');
+          modalContent.scrollTop = 0;
+
           requestAnimationFrame(() => {
             modal.classList.add('active');
           });
