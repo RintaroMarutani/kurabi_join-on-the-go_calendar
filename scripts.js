@@ -982,9 +982,9 @@
           const modalContent = modal.querySelector('.modal-content');
           modalContent.scrollTop = 0;
 
-          // 親ページ（STUDIO）にiframeの先頭へスクロールするよう依頼
+          // 親ページ（STUDIO）にiframeを全画面に拡大するよう依頼
           if (window.parent && window.parent !== window) {
-            window.parent.postMessage({ type: 'SCROLL_TO_IFRAME' }, '*');
+            window.parent.postMessage({ type: 'MODAL_OPEN' }, '*');
           }
 
           requestAnimationFrame(() => {
@@ -1134,6 +1134,11 @@
 
         // スクロールを元に戻す
         document.body.style.overflow = '';
+
+        // 親ページ（STUDIO）にiframeを元のサイズに戻すよう依頼
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'MODAL_CLOSE' }, '*');
+        }
       }
 
       document.getElementById('modal-close').addEventListener('click', () => closeModal());
