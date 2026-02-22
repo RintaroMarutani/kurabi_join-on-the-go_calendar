@@ -978,8 +978,13 @@
           modal.offsetHeight;
 
           // モーダルのスクロール位置をタイトル（先頭）にリセット
+          modal.scrollTop = 0;
           const modalContent = modal.querySelector('.modal-content');
           modalContent.scrollTop = 0;
+          const modalHeader = modal.querySelector('.modal-header');
+          if (modalHeader) {
+            modalHeader.scrollIntoView({ block: 'start' });
+          }
 
           requestAnimationFrame(() => {
             modal.classList.add('active');
