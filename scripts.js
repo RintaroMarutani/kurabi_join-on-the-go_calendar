@@ -17,8 +17,8 @@
         }
       } catch (_) {}
 
-      // データ取得: 静的JSON → GAS API フォールバック
-      const _fetchData = (url) => fetch(url, { cache: 'no-cache', mode: 'cors' })
+      // データ取得関数
+      const _fetchData = (url, opts) => fetch(url, opts)
         .then(res => {
           if (!res.ok) throw new Error(res.status);
           return res.json();
@@ -32,10 +32,10 @@
           return data;
         });
 
-      // 静的JSONを優先、失敗時はGAS APIにフォールバック
+      // 静的JSONを優先（CDNキャッシュ活用）、失敗時はGAS APIにフォールバック
       const _fetchPromise = (STATIC_JSON_URL
-        ? _fetchData(STATIC_JSON_URL).catch(() => _fetchData(API_ENDPOINT))
-        : _fetchData(API_ENDPOINT)
+        ? _fetchData(STATIC_JSON_URL, {}).catch(() => _fetchData(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' }))
+        : _fetchData(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' })
       ).catch(() => null);
 
       const HOUR_H = 60;
