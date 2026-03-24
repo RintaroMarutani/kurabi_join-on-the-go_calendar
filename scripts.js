@@ -1,8 +1,9 @@
     (async () => {
-      // APIエンドポイントはindex.htmlで定義されたグローバル変数を使用
+      // 静的JSON（GitHub Pages） → GAS API のフォールバック構成
+      const STATIC_JSON_URL = typeof EVENTS_JSON_URL !== 'undefined' ? EVENTS_JSON_URL : null;
       const API_ENDPOINT = CALENDAR_API_ENDPOINT;
 
-      // stale-while-revalidate: キャッシュがあれば即返し、裏でAPI更新
+      // stale-while-revalidate: キャッシュがあれば即返し、裏で更新
       const CACHE_KEY = 'cal_data';
       const CACHE_TIME_KEY = 'cal_data_ts';
       const CACHE_TTL = 30 * 60 * 1000; // 30分
@@ -16,9 +17,12 @@
         }
       } catch (_) {}
 
-      // APIフェッチを常に開始（キャッシュ有無に関わらず裏で更新）
-      const _fetchPromise = fetch(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' })
-        .then(res => res.json())
+      // データ取得: 静的JSON → GAS API フォールバック
+      const _fetchData = (url) => fetch(url, { cache: 'no-cache', mode: 'cors' })
+        .then(res => {
+          if (!res.ok) throw new Error(res.status);
+          return res.json();
+        })
         .then(json => {
           const data = (json && Array.isArray(json.data)) ? json.data : [];
           try {
@@ -26,8 +30,13 @@
             localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
           } catch (_) {}
           return data;
-        })
-        .catch(() => null);
+        });
+
+      // 静的JSONを優先、失敗時はGAS APIにフォールバック
+      const _fetchPromise = (STATIC_JSON_URL
+        ? _fetchData(STATIC_JSON_URL).catch(() => _fetchData(API_ENDPOINT))
+        : _fetchData(API_ENDPOINT)
+      ).catch(() => null);
 
       const HOUR_H = 60;
       const tz = 'Asia/Tokyo';
