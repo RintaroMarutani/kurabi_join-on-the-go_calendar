@@ -1,6 +1,6 @@
     (async () => {
       // 静的JSON（GitHub Pages） → GAS API のフォールバック構成
-      const STATIC_JSON_URL = typeof EVENTS_JSON_URL !== 'undefined' ? EVENTS_JSON_URL : null;
+      const STATIC_JSON_URL = 'events.json';
       const API_ENDPOINT = CALENDAR_API_ENDPOINT;
 
       // stale-while-revalidate: キャッシュがあれば即返し、裏で更新
