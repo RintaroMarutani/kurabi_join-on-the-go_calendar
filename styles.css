@@ -291,6 +291,7 @@
       display: flex;
       flex-direction: column;
       gap: 8px;
+      align-self: flex-start;
     }
 
     .cal-event__title {
@@ -298,12 +299,14 @@
       font-size: 18px;
       color: var(--event-text);
       line-height: 1.3;
+      order: 2;
     }
 
     .cal-event__time {
       font-size: 16px;
       color: var(--event-text);
       opacity: 0.9;
+      order: 1;
     }
 
     .cal-event--small {

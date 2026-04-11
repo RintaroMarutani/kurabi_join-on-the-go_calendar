@@ -607,8 +607,7 @@
           const totalMins = 15.5 * 60;
 
           const topPercent = clamp((mins / totalMins) * 100, 0, 100);
-          const GAP_PERCENT = 0.5;
-          const heightPercent = Math.max((dur / totalMins) * 100 - GAP_PERCENT, 3);
+          const heightPercent = Math.max((dur / totalMins) * 100, 3);
           const safeHeightPercent = Math.max(1, Math.min(heightPercent, 100 - topPercent - 0.2));
 
           const card = document.createElement('div');
