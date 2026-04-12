@@ -560,6 +560,23 @@
         }
       }
 
+      // === テストモード: 連続・重複・短時間イベントの確認用 ===
+      const TEST_MODE = false;
+      if (TEST_MODE) {
+        const testDate = '2026/04/12';
+        const baseSvg = items.find(i => i['SVG'])?.['SVG'] || '';
+        items = [
+          { 'タイトル': 'Cedar chopsticks crafting', '開催日': testDate, '開始時間': '09:00', '終了時間': '10:30', '参加可能な人数': 4, 'SVG': baseSvg },
+          { 'タイトル': 'Tea ceremony experience', '開催日': testDate, '開始時間': '10:30', '終了時間': '12:00', '参加可能な人数': 3, 'SVG': baseSvg },
+          { 'タイトル': 'Cedar chopsticks crafting', '開催日': testDate, '開始時間': '12:00', '終了時間': '13:30', '参加可能な人数': 2, 'SVG': baseSvg },
+          { 'タイトル': 'Overlap A: Tea ceremony', '開催日': testDate, '開始時間': '14:00', '終了時間': '15:30', '参加可能な人数': 4, 'SVG': baseSvg },
+          { 'タイトル': 'Overlap B: Chopsticks', '開催日': testDate, '開始時間': '14:00', '終了時間': '15:30', '参加可能な人数': 2, 'SVG': baseSvg },
+          { 'タイトル': 'Short 30min event', '開催日': testDate, '開始時間': '16:00', '終了時間': '16:30', '参加可能な人数': 5, 'SVG': baseSvg },
+          { 'タイトル': 'Short 30min after', '開催日': testDate, '開始時間': '16:30', '終了時間': '17:00', '参加可能な人数': 1, 'SVG': baseSvg },
+        ];
+      }
+      // === テストモード終了 ===
+
       const g = (o, k) => {
         if (o && o[k] !== undefined) return o[k];
         if (o && o[k.trim()] !== undefined) return o[k.trim()];
@@ -632,8 +649,7 @@
           }
 
           card.className = className;
-          // cssTextで一括設定してリフロー削減
-          card.style.cssText = 'top:' + topPercent + '%;min-height:' + safeHeightPercent + '%;cursor:pointer;';
+          card.style.cssText = 'top:calc(' + topPercent + '% + 3px);height:calc(' + safeHeightPercent + '% - 6px);cursor:pointer;';
 
           const eventIconSvg = g(ev, 'SVG');
 
@@ -658,10 +674,12 @@
           }
 
           card.innerHTML = spotsHtml +
-        iconHtml +
-        '<div class="cal-event__content">' +
-          '<div class="cal-event__title">' + escapeHTML(title) + '</div>' +
-          '<div class="cal-event__time">' + escapeHTML(timeStr) + '</div>' +
+        '<div class="cal-event__inner">' +
+          iconHtml +
+          '<div class="cal-event__content">' +
+            '<div class="cal-event__title">' + escapeHTML(title) + '</div>' +
+            '<div class="cal-event__time"><span>' + escapeHTML(g(ev, '開始時間')) + '</span><span>' + escapeHTML(g(ev, '終了時間')) + '</span></div>' +
+          '</div>' +
         '</div>';
 
           card.addEventListener('click', () => {
@@ -746,16 +764,10 @@
                 ? widthPercent - (colIdx === 0 ? 0 : gap / 2)
                 : widthPercent - (colIdx === 0 ? gap / 2 : gap);
 
-              // cssTextで一括設定してリフロー削減
               const currentCss = event.card.style.cssText;
               event.card.style.cssText = currentCss + 'left:' + actualLeft + '%;width:' + actualWidth + '%;right:auto;';
 
               if (numColumns >= 2) {
-                const currentHeight = event.card.style.height;
-                // cssTextで一括設定してリフロー削減
-                const css = event.card.style.cssText;
-                event.card.style.cssText = css + 'min-height:' + currentHeight + ';height:auto;';
-
                 if (numColumns >= 3) {
                   event.card.classList.add('cal-event--very-narrow');
                 } else {
@@ -769,7 +781,6 @@
         // 時刻が遅いものほどz-indexが高くなるようにソート（開始時刻の昇順）
         dayEvents.sort((a, b) => a.start - b.start);
 
-        // DocumentFragmentを使用してバッチでDOM追加、zIndexもcssTextで設定
         const dayFragment = document.createDocumentFragment();
         dayEvents.forEach((event, i) => {
           const css = event.card.style.cssText;

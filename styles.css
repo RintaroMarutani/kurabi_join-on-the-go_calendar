@@ -184,31 +184,37 @@
       left: 0;
       right: 0;
       box-sizing: border-box;
-      border-top: 2px solid rgba(0,0,0,0.12);
       background: var(--event-active);
-      padding: 16px 20px;
       border-radius: 4px;
       transition: transform 0.2s;
       cursor: pointer;
+      z-index: 21;
+      touch-action: manipulation;
+    }
+
+    .cal-event__inner {
+      height: 100%;
+      overflow: hidden;
       display: flex;
       align-items: center;
-      gap: 24px;
-      min-height: 80px;
-      z-index: 21;
-      /* タッチ最適化: 300msの遅延を削減 */
-      touch-action: manipulation;
+      gap: 14px;
+      padding: 10px 14px;
+      box-sizing: border-box;
+      border-top: 2px solid rgba(0,0,0,0.12);
+      border-radius: 4px;
     }
 
     .cal-event__spots {
       position: absolute;
       bottom: 100%;
-      right: 0;
+      right: 4px;
+      width: fit-content;
       background: #FFFFFF;
       color: var(--color-green);
-      padding: 0 16px;
-      border-radius: 8px 8px 0 0;
-      font-size: 14px;
-      font-weight: 400;
+      padding: 0 10px;
+      border-radius: 6px 6px 0 0;
+      font-size: 9px;
+      font-weight: 500;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -216,15 +222,15 @@
       z-index: 22;
       white-space: nowrap;
       line-height: 1;
-      height: 30px;
+      height: 20px;
       max-width: calc(100% - 4px);
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .cal-event__spots svg {
-      width: 20px;
-      height: 20px;
+      width: 14px;
+      height: 14px;
       fill: var(--color-green);
       flex-shrink: 0;
     }
@@ -288,162 +294,188 @@
 
     .cal-event__content {
       flex: 2;
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      align-self: flex-start;
+      gap: 4px;
     }
 
     .cal-event__title {
       font-weight: 700;
-      font-size: 18px;
+      font-size: 16px;
       color: var(--event-text);
-      line-height: 1.3;
+      line-height: 1.1;
       order: 2;
     }
 
     .cal-event__time {
-      font-size: 16px;
+      font-size: 13px;
       color: var(--event-text);
       opacity: 0.9;
       order: 1;
+      display: flex;
+      gap: 0;
     }
 
-    .cal-event--small {
-      min-height: 60px;
-      padding: 12px 16px;
+    .cal-event__time span:first-child::after {
+      content: '\00a0-\00a0';
+    }
+
+    /* --- 短いイベント: small (46px以下) --- */
+    .cal-event--small > .cal-event__inner {
+      flex-direction: row;
+      align-items: center;
+      padding: 6px 10px;
+      gap: 8px;
     }
 
     .cal-event--small .cal-event__icon {
+      flex: 0 0 auto;
+      width: 28px;
+      height: auto;
+      min-height: auto;
+    }
+
+    .cal-event--small .cal-event__content {
+      flex: 1;
+      flex-direction: row;
+      align-items: center;
+      gap: 10px;
       width: auto;
-      height: 100%;
+    }
+
+    .cal-event--small .cal-event__time {
+      flex-direction: column;
+      flex-shrink: 0;
+      font-size: 11px;
+    }
+
+    .cal-event--small .cal-event__time span:first-child::after {
+      content: none;
     }
 
     .cal-event--small .cal-event__title {
       font-size: 12px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
-    .cal-event--small .cal-event__time {
-      font-size: 11px;
-    }
-
-    .cal-event--small .cal-event__spots {
-      font-size: 12px;
-      padding: 0 12px;
-    }
-
-    .cal-event--small .cal-event__spots svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    .cal-event--tiny {
-      min-height: 50px;
-      padding: 10px 12px;
-      gap: 12px;
+    /* --- 極短イベント: tiny (23px以下) --- */
+    .cal-event--tiny > .cal-event__inner {
+      flex-direction: row;
+      align-items: center;
+      padding: 2px 8px;
+      gap: 6px;
     }
 
     .cal-event--tiny .cal-event__icon {
-      width: auto;
-      height: 100%;
+      flex: 0 0 auto;
+      width: 18px;
+      height: auto;
+      min-height: auto;
     }
 
-    .cal-event--tiny .cal-event__title {
-      font-size: 11px;
+    .cal-event--tiny .cal-event__content {
+      flex: 1;
+      flex-direction: row;
+      align-items: center;
+      gap: 8px;
+      width: auto;
     }
 
     .cal-event--tiny .cal-event__time {
-      font-size: 10px;
-    }
-
-    .cal-event--tiny .cal-event__spots {
-      font-size: 11px;
-      padding: 0 10px;
-    }
-
-    .cal-event--tiny .cal-event__spots svg {
-      width: 14px;
-      height: 14px;
-    }
-
-    .cal-event--narrow {
-      padding: 12px 14px;
-      gap: 8px;
       flex-direction: column;
-      align-items: flex-start;
-      text-align: left;
+      flex-shrink: 0;
+      font-size: 9px;
+      line-height: 1.2;
+    }
+
+    .cal-event--tiny .cal-event__time span:first-child::after {
+      content: none;
+    }
+
+    .cal-event--tiny .cal-event__title {
+      font-size: 10px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* --- 横並び2列: narrow --- */
+    .cal-event--narrow > .cal-event__inner {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto auto;
+      gap: 4px 10px;
+      padding: 8px 10px;
     }
 
     .cal-event--narrow .cal-event__icon {
-      width: 50%;
-      height: 100%;
+      grid-row: 1;
+      grid-column: 1;
+      width: 25px;
+      height: 25px;
     }
 
     .cal-event--narrow .cal-event__content {
-      align-items: flex-start;
-    }
-
-    .cal-event--narrow .cal-event__title {
-      font-size: 13px;
-      line-height: 1.3;
+      display: contents;
     }
 
     .cal-event--narrow .cal-event__time {
-      font-size: 11px;
-      line-height: 1.3;
-    }
-
-    .cal-event--narrow .cal-event__spots {
-      font-size: 12px;
-      padding: 0 12px;
-      left: 50%;
-      right: auto;
-      transform: translateX(-50%);
-    }
-
-    .cal-event--narrow .cal-event__spots svg {
-      width: 16px;
-      height: 16px;
-    }
-
-    .cal-event--very-narrow {
-      padding: 10px 8px;
-      gap: 6px;
+      grid-row: 2;
+      grid-column: 1;
       flex-direction: column;
-      align-items: flex-start;
-      text-align: left;
+      font-size: 11px;
+    }
+
+    .cal-event--narrow .cal-event__time span:first-child::after {
+      content: none;
+    }
+
+    .cal-event--narrow .cal-event__title {
+      grid-row: 1 / 3;
+      grid-column: 2;
+      font-size: 13px;
+      align-self: center;
+    }
+
+    /* --- 横並び3列以上: very-narrow --- */
+    .cal-event--very-narrow > .cal-event__inner {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      grid-template-rows: auto auto;
+      gap: 2px 8px;
+      padding: 6px 8px;
     }
 
     .cal-event--very-narrow .cal-event__icon {
-      width: auto;
-      height: 100%;
+      grid-row: 1;
+      grid-column: 1;
+      width: 25px;
+      height: 25px;
     }
 
     .cal-event--very-narrow .cal-event__content {
-      align-items: flex-start;
-    }
-
-    .cal-event--very-narrow .cal-event__title {
-      font-size: 12px;
-      line-height: 1.3;
+      display: contents;
     }
 
     .cal-event--very-narrow .cal-event__time {
-      font-size: 10px;
-      line-height: 1.3;
+      grid-row: 2;
+      grid-column: 1;
+      flex-direction: column;
+      font-size: 9px;
     }
 
-    .cal-event--very-narrow .cal-event__spots {
-      font-size: 10px;
-      padding: 0 8px;
-      left: 50%;
-      right: auto;
-      transform: translateX(-50%);
+    .cal-event--very-narrow .cal-event__time span:first-child::after {
+      content: none;
     }
 
-    .cal-event--very-narrow .cal-event__spots svg {
-      width: 14px;
-      height: 14px;
+    .cal-event--very-narrow .cal-event__title {
+      grid-row: 1 / 3;
+      grid-column: 2;
+      font-size: 11px;
+      align-self: center;
     }
 
     .modal-overlay {
