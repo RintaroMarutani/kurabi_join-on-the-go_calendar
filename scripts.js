@@ -630,9 +630,14 @@
           const card = document.createElement('div');
           let className = 'cal-event';
 
-          if (safeHeightPercent < 2.5) {
+          const containerMinHeight = 930;
+          const cardPx = (safeHeightPercent / 100) * containerMinHeight - 6;
+          const normalPadding = 10;
+          const normalContentH = 42;
+          const availablePadding = (cardPx - normalContentH) / 2;
+          if (availablePadding < 0) {
             className += ' cal-event--tiny';
-          } else if (safeHeightPercent < 5) {
+          } else if (availablePadding < 8) {
             className += ' cal-event--small';
           }
 
