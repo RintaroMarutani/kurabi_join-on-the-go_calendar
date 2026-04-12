@@ -347,7 +347,6 @@
     .cal-event--small .cal-event__time {
       flex-direction: column;
       flex-shrink: 0;
-      font-size: 11px;
     }
 
     .cal-event--small .cal-event__time span:first-child::after {
@@ -355,7 +354,6 @@
     }
 
     .cal-event--small .cal-event__title {
-      font-size: 12px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -387,8 +385,6 @@
     .cal-event--tiny .cal-event__time {
       flex-direction: column;
       flex-shrink: 0;
-      font-size: 9px;
-      line-height: 1.2;
     }
 
     .cal-event--tiny .cal-event__time span:first-child::after {
@@ -396,7 +392,6 @@
     }
 
     .cal-event--tiny .cal-event__title {
-      font-size: 10px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
