@@ -427,15 +427,29 @@
       height: 12px;
     }
 
-    /* 2列重複: アイコン列を畳み(--lead:0)、時刻＋残席＋題に全幅を渡す。Gridのまま縦積みに切替えない */
+    /* 2列重複: 1列Gridにし、アイコンを上段(row1)・本文を下段(row2)に。
+       横幅を食わずにアイコンを表示する。 */
     .cal-event--narrow {
       padding: 12px 12px;
       --lead: 0px;
       column-gap: 0;
+      grid-template-columns: 1fr;
+      row-gap: 4px;
     }
 
     .cal-event--narrow .cal-event__icon {
-      display: none;
+      display: flex;
+      grid-column: 1;
+      grid-row: 1;
+      place-self: start start;
+      width: 30px;
+      height: 26px;
+      margin-top: 0;
+    }
+
+    .cal-event--narrow .cal-event__body {
+      grid-column: 1;
+      grid-row: 2;
     }
 
     .cal-event--narrow.cal-event--small .cal-event__title {
@@ -464,16 +478,29 @@
       height: 13px;
     }
 
-    /* 3・4列重複: アイコン列を畳み(--lead:0)、アイコン・時刻を優先度カスケードで省く。
+    /* 3・4列重複: 1列Gridでアイコンを上段に小さく表示。時刻は省く。
        残席は右上コーナー、題は語中折返し可で全幅2行。 */
     .cal-event--very-narrow {
       padding: 10px 8px;
       --lead: 0px;
       column-gap: 0;
+      grid-template-columns: 1fr;
+      row-gap: 3px;
     }
 
     .cal-event--very-narrow .cal-event__icon {
-      display: none;
+      display: flex;
+      grid-column: 1;
+      grid-row: 1;
+      place-self: start start;
+      width: 24px;
+      height: 22px;
+      margin-top: 0;
+    }
+
+    .cal-event--very-narrow .cal-event__body {
+      grid-column: 1;
+      grid-row: 2;
     }
 
     .cal-event--very-narrow .cal-event__time {
