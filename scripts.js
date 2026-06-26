@@ -617,6 +617,9 @@
             className += ' cal-event--tiny';
           } else if (safeHeightPercent < 5) {
             className += ' cal-event--small';
+          } else if (safeHeightPercent >= 15) {
+            // 長尺カード: 縦に余裕があるので題を3行まで表示（--tall）
+            className += ' cal-event--tall';
           }
 
           const title = g(ev, 'タイトル') || '';

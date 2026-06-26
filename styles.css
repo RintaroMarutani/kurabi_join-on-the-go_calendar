@@ -179,6 +179,9 @@
       z-index: 1;
     }
 
+    /* 全カードを単一の CSS Grid に統一: [アイコン列 --lead | 本文 1fr]。
+       横並び(flex)と縦積み(flex-column)の二系統を廃し、--lead を 56→44→40→0 と縮める
+       だけで横長↔狭幅↔重複を連続表現する。中身は上揃え（開始時刻の真下から始まる）。 */
     .cal-event {
       position: absolute;
       left: 0;
@@ -188,15 +191,17 @@
       padding: 16px 20px;
       transition: transform 0.2s;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 24px;
+      display: grid;
+      grid-template-columns: var(--lead, 56px) 1fr;
+      column-gap: 20px;
+      align-items: start;
       min-height: 80px;
       z-index: 21;
       /* タッチ最適化: 300msの遅延を削減 */
       touch-action: manipulation;
       /* 塗り色（active/inactiveで切替）。実際の塗りは ::before が描画 */
       --cal-fill: var(--event-active);
+      --lead: 56px;
     }
 
     /* カードの塗り・角丸・縁取りを ::before に逃がし、inset で上下1.5px後退させる。
@@ -215,10 +220,11 @@
       pointer-events: none;
     }
 
-    /* 残席バッジ: head行のフロー内・時刻のすぐ右にグループ。時刻と重ならず幅も確保。
+    /* 残席バッジ: head行のフロー内・右端固定(margin-left:auto)。時刻=左/残席=右の両端配置。
        ラベル語は出さず「人型アイコン＋数字」のコンパクトピル（意味は aria-label で担保）。 */
     .cal-event__spots {
       flex: 0 0 auto;
+      margin-left: auto;
       background: #FFFFFF;
       color: var(--color-green);
       padding: 2px 8px;
@@ -285,12 +291,13 @@
       fill: #BEBEBE;
     }
 
-    /* アイコン＝固定リード列。確定した高さを与え、SVGが枠を超えて肥大しないようにする
-       （旧 flex:1 の幅1/3比率をやめ、テキスト領域を広く取る） */
+    /* アイコン＝Gridのリード列(col1)。--lead連動の幅・確定高48px。上端頭合わせで題と視覚を揃える。 */
     .cal-event__icon {
-      flex: 0 0 auto;
-      width: 56px;
+      grid-column: 1;
+      place-self: start center;
+      width: var(--lead, 56px);
       height: 48px;
+      margin-top: 2px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -306,20 +313,22 @@
       fill: white;
     }
 
-    /* body＝縦スタック（上: head[time+spots] / 下: title） */
+    /* body＝Grid col2（アイコン無しでも常にcol2）。縦スタック(head上/title下)。 */
     .cal-event__body {
-      flex: 1;
+      grid-column: 2;
       min-width: 0;
       display: flex;
       flex-direction: column;
       gap: 6px;
     }
 
-    /* head＝時刻（左）＋残席（右・margin-left:auto）の1行。重なりが構造的に起きない */
+    /* head＝時刻（左）＋残席（右・margin-left:auto）。狭幅で入り切らない時は残席が
+       下段へ折返し(flex-wrap)、時刻との重なり/溢れを防ぐ。 */
     .cal-event__head {
       display: flex;
+      flex-wrap: wrap;
       align-items: flex-start;
-      gap: 8px;
+      gap: 2px 8px;
     }
 
     .cal-event__time {
@@ -336,22 +345,33 @@
       font-size: 18px;
       color: var(--event-text);
       line-height: 1.3;
-      /* タイトルが長い場合は最大2行で省略（…） */
+      /* 既定は最大2行で省略（…）。狭幅では語境界以外でも折返して中途半端切れを防ぐ */
       display: -webkit-box;
       -webkit-line-clamp: 2;
       line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+
+    /* 長尺カード(--tall, JS付与)は縦の余りを題の行数(3行)に転化して省略を減らす */
+    .cal-event--tall .cal-event__title {
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
     }
 
     .cal-event--small {
       min-height: 60px;
       padding: 12px 16px;
+      --lead: 44px;
     }
 
     .cal-event--small .cal-event__icon {
       width: 44px;
       height: 34px;
+      margin-top: 0;
+      place-self: center center;
     }
 
     /* 高さの低い枠ではタイトルを1行に詰める */
@@ -375,15 +395,16 @@
       height: 13px;
     }
 
+    /* 極短: アイコン列を畳む(--lead:0)。情報密度優先 */
     .cal-event--tiny {
       min-height: 50px;
       padding: 10px 12px;
-      gap: 12px;
+      --lead: 0px;
+      column-gap: 0;
     }
 
     .cal-event--tiny .cal-event__icon {
-      width: 40px;
-      height: 28px;
+      display: none;
     }
 
     .cal-event--tiny .cal-event__title {
@@ -406,18 +427,20 @@
       height: 12px;
     }
 
-    /* 狭幅(2列): 縦積み。アイコンは上に小さく、body全幅。head(time+spots)＋title */
+    /* 2列重複: アイコン列を畳み(--lead:0)、時刻＋残席＋題に全幅を渡す。Gridのまま縦積みに切替えない */
     .cal-event--narrow {
-      padding: 12px 14px;
-      gap: 8px;
-      flex-direction: column;
-      align-items: stretch;
-      text-align: left;
+      padding: 12px 12px;
+      --lead: 0px;
+      column-gap: 0;
     }
 
     .cal-event--narrow .cal-event__icon {
-      width: 100%;
-      height: 28px;
+      display: none;
+    }
+
+    .cal-event--narrow.cal-event--small .cal-event__title {
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
     }
 
     .cal-event--narrow .cal-event__title {
@@ -441,13 +464,12 @@
       height: 13px;
     }
 
-    /* 3列重複: 縦積み。アイコン・時刻は省いてスペース確保。head=残席のみ(右寄せ)＋title */
+    /* 3・4列重複: アイコン列を畳み(--lead:0)、アイコン・時刻を優先度カスケードで省く。
+       残席は右上コーナー、題は語中折返し可で全幅2行。 */
     .cal-event--very-narrow {
       padding: 10px 8px;
-      gap: 6px;
-      flex-direction: column;
-      align-items: stretch;
-      text-align: left;
+      --lead: 0px;
+      column-gap: 0;
     }
 
     .cal-event--very-narrow .cal-event__icon {
@@ -477,6 +499,43 @@
     .cal-event--very-narrow .cal-event__spots svg {
       width: 12px;
       height: 12px;
+    }
+
+    /* モバイル(単日・全幅): アイコン列を 56→40px に圧縮して題の幅を回復(問題5)。
+       長尺の3行は縦長過多防止のため2行へ戻す。重複は --lead:0 のまま題優先。 */
+    @media (max-width: 768px) {
+      .cal-event {
+        --lead: 40px;
+        column-gap: 12px;
+        padding: 14px 16px;
+      }
+
+      .cal-event__icon {
+        width: 40px;
+        height: 34px;
+      }
+
+      .cal-event__title {
+        font-size: 16px;
+      }
+
+      .cal-event--tall .cal-event__title {
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+      }
+
+      .cal-event--small {
+        --lead: 40px;
+      }
+
+      /* 重複(狭幅)はモバイルでもアイコン列を畳む。上の .cal-event{--lead:40px} を打ち消す */
+      .cal-event--narrow,
+      .cal-event--very-narrow,
+      .cal-event--tiny {
+        --lead: 0px;
+        column-gap: 0;
+        padding: 12px 12px;
+      }
     }
 
     .modal-overlay {
