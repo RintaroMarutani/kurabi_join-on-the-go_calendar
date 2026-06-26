@@ -215,31 +215,22 @@
       pointer-events: none;
     }
 
-    /* 残席バッジ: カード外のしおりタブ(bottom:100%)→カード内右上のピルへ。
-       上のカードへの侵入が物理的に消え、連続枠が「繋がって見える」主因を除去。 */
+    /* 残席バッジ: head行のフロー内・右寄せ(margin-left:auto)。時刻と重ならず幅も確保。
+       ラベル語は出さず「人型アイコン＋数字」のコンパクトピル（意味は aria-label で担保）。 */
     .cal-event__spots {
-      position: absolute;
-      top: 6px;
-      right: 6px;
-      bottom: auto;
-      left: auto;
-      transform: none;
+      flex: 0 0 auto;
+      margin-left: auto;
       background: #FFFFFF;
       color: var(--color-green);
-      padding: 3px 10px;
+      padding: 2px 8px;
       border-radius: 999px;
       font-size: 12px;
       font-weight: 600;
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      z-index: 2;
       white-space: nowrap;
       line-height: 1;
-      height: auto;
-      max-width: calc(100% - 12px);
-      overflow: hidden;
-      text-overflow: ellipsis;
       box-shadow: 0 1px 2px rgba(0,0,0,0.18);
     }
 
@@ -295,10 +286,12 @@
       fill: #BEBEBE;
     }
 
+    /* アイコン＝固定リード列（旧 flex:1 の幅1/3比率をやめ、テキスト領域を広く取る） */
     .cal-event__icon {
-      flex: 1;
-      width: auto;
+      flex: 0 0 auto;
+      width: 52px;
       height: 100%;
+      max-height: 64px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -314,12 +307,29 @@
       fill: white;
     }
 
-    .cal-event__content {
-      flex: 2;
+    /* body＝縦スタック（上: head[time+spots] / 下: title） */
+    .cal-event__body {
+      flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
+      gap: 6px;
+    }
+
+    /* head＝時刻（左）＋残席（右・margin-left:auto）の1行。重なりが構造的に起きない */
+    .cal-event__head {
+      display: flex;
+      align-items: flex-start;
       gap: 8px;
-      align-self: flex-start;
+    }
+
+    .cal-event__time {
+      font-size: 16px;
+      color: var(--event-text);
+      opacity: 0.9;
+      flex: 0 1 auto;
+      min-width: 0;
+      white-space: nowrap;
     }
 
     .cal-event__title {
@@ -327,7 +337,6 @@
       font-size: 18px;
       color: var(--event-text);
       line-height: 1.3;
-      order: 2;
       /* タイトルが長い場合は最大2行で省略（…） */
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -336,25 +345,20 @@
       overflow: hidden;
     }
 
-    .cal-event__time {
-      font-size: 16px;
-      color: var(--event-text);
-      opacity: 0.9;
-      order: 1;
-    }
-
     .cal-event--small {
       min-height: 60px;
       padding: 12px 16px;
     }
 
     .cal-event--small .cal-event__icon {
-      width: auto;
-      height: 100%;
+      width: 44px;
     }
 
+    /* 高さの低い枠ではタイトルを1行に詰める */
     .cal-event--small .cal-event__title {
       font-size: 12px;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
     }
 
     .cal-event--small .cal-event__time {
@@ -362,8 +366,6 @@
     }
 
     .cal-event--small .cal-event__spots {
-      top: 4px;
-      right: 4px;
       font-size: 11px;
       padding: 2px 7px;
     }
@@ -373,12 +375,6 @@
       height: 13px;
     }
 
-    /* 高さの低い枠ではタイトルを1行に詰め、残席バッジとの衝突を避ける */
-    .cal-event--small .cal-event__title {
-      -webkit-line-clamp: 1;
-      line-clamp: 1;
-    }
-
     .cal-event--tiny {
       min-height: 50px;
       padding: 10px 12px;
@@ -386,12 +382,13 @@
     }
 
     .cal-event--tiny .cal-event__icon {
-      width: auto;
-      height: 100%;
+      width: 40px;
     }
 
     .cal-event--tiny .cal-event__title {
       font-size: 11px;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
     }
 
     .cal-event--tiny .cal-event__time {
@@ -399,8 +396,6 @@
     }
 
     .cal-event--tiny .cal-event__spots {
-      top: 3px;
-      right: 3px;
       font-size: 10px;
       padding: 1px 6px;
     }
@@ -410,26 +405,19 @@
       height: 12px;
     }
 
-    .cal-event--tiny .cal-event__title {
-      -webkit-line-clamp: 1;
-      line-clamp: 1;
-    }
-
+    /* 狭幅(2列): 縦積み。アイコンは上に小さく、body全幅。head(time+spots)＋title */
     .cal-event--narrow {
       padding: 12px 14px;
       gap: 8px;
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
       text-align: left;
     }
 
     .cal-event--narrow .cal-event__icon {
-      width: 50%;
-      height: 100%;
-    }
-
-    .cal-event--narrow .cal-event__content {
-      align-items: flex-start;
+      width: 100%;
+      height: auto;
+      max-height: 32px;
     }
 
     .cal-event--narrow .cal-event__title {
@@ -443,10 +431,6 @@
     }
 
     .cal-event--narrow .cal-event__spots {
-      top: 4px;
-      right: 4px;
-      left: auto;
-      transform: none;
       font-size: 11px;
       padding: 2px 7px;
       gap: 3px;
@@ -457,21 +441,21 @@
       height: 13px;
     }
 
+    /* 3列重複: 縦積み。アイコン・時刻は省いてスペース確保。head=残席のみ(右寄せ)＋title */
     .cal-event--very-narrow {
       padding: 10px 8px;
       gap: 6px;
       flex-direction: column;
-      align-items: flex-start;
+      align-items: stretch;
       text-align: left;
     }
 
     .cal-event--very-narrow .cal-event__icon {
-      width: auto;
-      height: 100%;
+      display: none;
     }
 
-    .cal-event--very-narrow .cal-event__content {
-      align-items: flex-start;
+    .cal-event--very-narrow .cal-event__time {
+      display: none;
     }
 
     .cal-event--very-narrow .cal-event__title {
@@ -479,16 +463,7 @@
       line-height: 1.3;
     }
 
-    .cal-event--very-narrow .cal-event__time {
-      font-size: 10px;
-      line-height: 1.3;
-    }
-
     .cal-event--very-narrow .cal-event__spots {
-      top: 4px;
-      right: 4px;
-      left: auto;
-      transform: none;
       font-size: 11px;
       padding: 2px 6px;
       gap: 2px;
@@ -497,18 +472,6 @@
     .cal-event--very-narrow .cal-event__spots svg {
       width: 12px;
       height: 12px;
-    }
-
-    /* 狭幅(2列/3列)ではラベル語を視覚的に隠し「数字＋人型アイコン」の極小ピルに圧縮
-       （aria-label で意味は担保） */
-    .cal-event--narrow .cal-event__spots .spots-label,
-    .cal-event--very-narrow .cal-event__spots .spots-label {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
     }
 
     .modal-overlay {

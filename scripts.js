@@ -650,19 +650,20 @@
           let spotsHtml = '';
           if (remainingSpots !== undefined && remainingSpots !== null && remainingSpots !== '') {
             spotsHtml = '<div class="cal-event__spots" aria-label="Remaining spots: ' + escapeHTML(remainingSpots) + '">' +
-            '<span class="spots-label">Remaining spots:&nbsp;</span>' +
-            '<span class="spots-num">' + escapeHTML(remainingSpots) + '</span>' +
             '<svg viewBox="0 0 24 24" aria-hidden="true">' +
               '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' +
             '</svg>' +
+            '<span class="spots-num">' + escapeHTML(remainingSpots) + '</span>' +
           '</div>';
           }
 
-          card.innerHTML = spotsHtml +
-        iconHtml +
-        '<div class="cal-event__content">' +
+          card.innerHTML = iconHtml +
+        '<div class="cal-event__body">' +
+          '<div class="cal-event__head">' +
+            '<div class="cal-event__time">' + escapeHTML(timeStr) + '</div>' +
+            spotsHtml +
+          '</div>' +
           '<div class="cal-event__title">' + escapeHTML(title) + '</div>' +
-          '<div class="cal-event__time">' + escapeHTML(timeStr) + '</div>' +
         '</div>';
 
           card.addEventListener('click', () => {
