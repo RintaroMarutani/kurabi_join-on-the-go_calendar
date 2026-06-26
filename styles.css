@@ -215,11 +215,10 @@
       pointer-events: none;
     }
 
-    /* 残席バッジ: head行のフロー内・右寄せ(margin-left:auto)。時刻と重ならず幅も確保。
+    /* 残席バッジ: head行のフロー内・時刻のすぐ右にグループ。時刻と重ならず幅も確保。
        ラベル語は出さず「人型アイコン＋数字」のコンパクトピル（意味は aria-label で担保）。 */
     .cal-event__spots {
       flex: 0 0 auto;
-      margin-left: auto;
       background: #FFFFFF;
       color: var(--color-green);
       padding: 2px 8px;
@@ -286,12 +285,12 @@
       fill: #BEBEBE;
     }
 
-    /* アイコン＝固定リード列（旧 flex:1 の幅1/3比率をやめ、テキスト領域を広く取る） */
+    /* アイコン＝固定リード列。確定した高さを与え、SVGが枠を超えて肥大しないようにする
+       （旧 flex:1 の幅1/3比率をやめ、テキスト領域を広く取る） */
     .cal-event__icon {
       flex: 0 0 auto;
-      width: 52px;
-      height: 100%;
-      max-height: 64px;
+      width: 56px;
+      height: 48px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -352,6 +351,7 @@
 
     .cal-event--small .cal-event__icon {
       width: 44px;
+      height: 34px;
     }
 
     /* 高さの低い枠ではタイトルを1行に詰める */
@@ -383,6 +383,7 @@
 
     .cal-event--tiny .cal-event__icon {
       width: 40px;
+      height: 28px;
     }
 
     .cal-event--tiny .cal-event__title {
@@ -416,8 +417,7 @@
 
     .cal-event--narrow .cal-event__icon {
       width: 100%;
-      height: auto;
-      max-height: 32px;
+      height: 28px;
     }
 
     .cal-event--narrow .cal-event__title {
@@ -456,6 +456,11 @@
 
     .cal-event--very-narrow .cal-event__time {
       display: none;
+    }
+
+    /* 残席のみのhead行は右寄せ（コーナーバッジ風） */
+    .cal-event--very-narrow .cal-event__head {
+      justify-content: flex-end;
     }
 
     .cal-event--very-narrow .cal-event__title {
