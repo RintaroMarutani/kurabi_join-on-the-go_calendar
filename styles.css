@@ -202,7 +202,7 @@
       touch-action: manipulation;
       /* 塗り色（active/inactiveで切替）。実際の塗りは ::before が描画 */
       --cal-fill: var(--event-active);
-      --lead: 56px;
+      --lead: 84px;
     }
 
     /* カードの塗り・角丸・縁取りを ::before に逃がし、inset で上下1.5px後退させる。
@@ -299,8 +299,8 @@
     .cal-event__icon {
       grid-column: 1;
       place-self: start center;
-      width: var(--lead, 56px);
-      height: 48px;
+      width: var(--lead, 84px);
+      height: 72px;
       margin-top: 2px;
       display: flex;
       align-items: center;
@@ -369,12 +369,12 @@
     .cal-event--small {
       min-height: 60px;
       padding: 12px;
-      --lead: 44px;
+      --lead: 66px;
     }
 
     .cal-event--small .cal-event__icon {
-      width: 44px;
-      height: 34px;
+      width: 66px;
+      height: 51px;
       margin-top: 0;
       place-self: center center;
     }
@@ -451,8 +451,8 @@
       grid-column: 1;
       grid-row: 1;
       place-self: start start;
-      width: 38px;
-      height: 32px;
+      width: 57px;
+      height: 48px;
       margin-top: 0;
     }
 
@@ -504,8 +504,8 @@
       grid-column: 1;
       grid-row: 1;
       place-self: start start;
-      width: 26px;
-      height: 24px;
+      width: 39px;
+      height: 36px;
       margin-top: 0;
     }
 
@@ -547,14 +547,14 @@
        長尺の3行は縦長過多防止のため2行へ戻す。重複は --lead:0 のまま題優先。 */
     @media (max-width: 768px) {
       .cal-event {
-        --lead: 40px;
+        --lead: 60px;
         column-gap: 12px;
         padding: 14px;
       }
 
       .cal-event__icon {
-        width: 40px;
-        height: 34px;
+        width: 60px;
+        height: 51px;
       }
 
       .cal-event__title {
@@ -567,7 +567,7 @@
       }
 
       .cal-event--small {
-        --lead: 40px;
+        --lead: 60px;
       }
 
       /* 重複(狭幅)はモバイルでもアイコン列を畳む。上の .cal-event{--lead:40px} を打ち消す */
