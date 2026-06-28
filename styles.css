@@ -220,11 +220,14 @@
       pointer-events: none;
     }
 
-    /* 残席バッジ: head行のフロー内・右端固定(margin-left:auto)。時刻=左/残席=右の両端配置。
-       ラベル語は出さず「人型アイコン＋数字」のコンパクトピル（意味は aria-label で担保）。 */
+    /* 残席バッジ: サイズ/レイアウトに依らず常にカード右上へ固定。
+       ベストプラクティスに従い position:absolute でフローから外し（要素の並び替えの影響を受けない）、
+       本文側(head)に余白を確保して重なりを防ぐ。ラベル語は出さず「人型＋数字」のコンパクトピル。 */
     .cal-event__spots {
-      flex: 0 0 auto;
-      margin-left: auto;
+      position: absolute;
+      top: 14px;
+      right: 16px;
+      z-index: 3;
       background: #FFFFFF;
       color: var(--color-green);
       padding: 2px 8px;
@@ -322,13 +325,14 @@
       gap: 6px;
     }
 
-    /* head＝時刻（左）＋残席（右・margin-left:auto）。狭幅で入り切らない時は残席が
-       下段へ折返し(flex-wrap)、時刻との重なり/溢れを防ぐ。 */
+    /* head＝時刻のみ（残席は絶対配置でカード右上へ）。右上の残席ぶんの余白を確保して
+       時刻が下に潜り込まないようにする（横長・短尺カードで有効）。 */
     .cal-event__head {
       display: flex;
       flex-wrap: wrap;
       align-items: flex-start;
       gap: 2px 8px;
+      padding-right: 48px;
     }
 
     .cal-event__time {
@@ -386,6 +390,8 @@
     }
 
     .cal-event--small .cal-event__spots {
+      top: 10px;
+      right: 14px;
       font-size: 11px;
       padding: 2px 7px;
     }
@@ -418,6 +424,8 @@
     }
 
     .cal-event--tiny .cal-event__spots {
+      top: 8px;
+      right: 10px;
       font-size: 10px;
       padding: 1px 6px;
     }
@@ -468,6 +476,8 @@
     }
 
     .cal-event--narrow .cal-event__spots {
+      top: 10px;
+      right: 10px;
       font-size: 11px;
       padding: 2px 7px;
       gap: 3px;
@@ -507,9 +517,10 @@
       display: none;
     }
 
-    /* 残席のみのhead行は右寄せ（コーナーバッジ風） */
+    /* 狭幅カードは残席が上段(行1)の右上に絶対配置されるため、head(時刻)側の右余白は不要 */
+    .cal-event--narrow .cal-event__head,
     .cal-event--very-narrow .cal-event__head {
-      justify-content: flex-end;
+      padding-right: 0;
     }
 
     .cal-event--very-narrow .cal-event__title {
@@ -518,14 +529,17 @@
     }
 
     .cal-event--very-narrow .cal-event__spots {
+      top: 8px;
+      right: 8px;
       font-size: 11px;
       padding: 2px 6px;
       gap: 2px;
     }
 
+    /* 3・4列の極狭カードは残席を数字のみ(人型SVG非表示)に縮小し、上段左のアイコンと
+       右上バッジが横で衝突しないようにする（意味は aria-label で担保）。 */
     .cal-event--very-narrow .cal-event__spots svg {
-      width: 12px;
-      height: 12px;
+      display: none;
     }
 
     /* モバイル(単日・全幅): アイコン列を 56→40px に圧縮して題の幅を回復(問題5)。
