@@ -231,6 +231,7 @@
       position: absolute;
       top: 16px;
       right: 16px;
+      transform: translate(4px, -4px);
       z-index: 3;
       background: #FFFFFF;
       color: var(--color-green);
@@ -266,6 +267,15 @@
       /* 塗りが ::before に移ったため、hover時の背景変更も ::before に向ける */
       .cal-event:hover:not(.cal-event--inactive)::before {
         background: #FAA12D;
+      }
+
+      /* hover時は背景のオレンジと連動して残席バッジの文字・アイコンもオレンジに */
+      .cal-event:hover:not(.cal-event--inactive) .cal-event__spots {
+        color: #FAA12D;
+      }
+
+      .cal-event:hover:not(.cal-event--inactive) .cal-event__spots svg {
+        fill: #FAA12D;
       }
     }
 
