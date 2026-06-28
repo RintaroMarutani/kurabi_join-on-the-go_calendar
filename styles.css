@@ -202,9 +202,10 @@
       touch-action: manipulation;
       /* 塗り色（active/inactiveで切替）。実際の塗りは ::before が描画 */
       --cal-fill: var(--event-active);
-      /* アイコン列幅を画面幅に連動（広い3列では最大84px=1.5x、狭まると縮小）。
+      /* アイコン列幅を画面幅に連動（1280px以上で最大84px=1.5x、3列が狭まる1024pxへ向け
+         36pxまで縮小し、時刻＋残席バッジ＋本文が必ず収まるようにする）。
          1024px以下は単日表示(@media)で別途上書き。 */
-      --lead: clamp(60px, 6.6vw, 84px);
+      --lead: clamp(36px, calc(18.75vw - 156px), 84px);
     }
 
     /* カードの塗り・角丸・縁取りを ::before に逃がし、inset で上下1.5px後退させる。
@@ -346,6 +347,9 @@
       flex: 0 1 auto;
       min-width: 0;
       white-space: nowrap;
+      /* 万一狭くても残席バッジ下へ潜らないよう、はみ出しは省略（通常は収まる） */
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .cal-event__title {
@@ -372,7 +376,7 @@
     .cal-event--small {
       min-height: 60px;
       padding: 12px;
-      --lead: clamp(48px, 5.2vw, 66px);
+      --lead: clamp(36px, calc(18.75vw - 156px), 66px);
     }
 
     .cal-event--small .cal-event__icon {
