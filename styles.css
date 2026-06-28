@@ -240,7 +240,6 @@
       gap: 4px;
       white-space: nowrap;
       line-height: 1;
-      box-shadow: 0 1px 2px rgba(0,0,0,0.18);
     }
 
     .cal-event__spots svg {
