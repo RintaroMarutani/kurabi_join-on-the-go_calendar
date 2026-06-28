@@ -188,7 +188,7 @@
       right: 0;
       box-sizing: border-box;
       background: transparent;
-      padding: 16px 20px;
+      padding: 16px;
       transition: transform 0.2s;
       cursor: pointer;
       display: grid;
@@ -196,6 +196,7 @@
       column-gap: 20px;
       align-items: start;
       min-height: 80px;
+      /* パディングは四辺一律（サイズ別に値だけ変える） */
       z-index: 21;
       /* タッチ最適化: 300msの遅延を削減 */
       touch-action: manipulation;
@@ -225,7 +226,7 @@
        本文側(head)に余白を確保して重なりを防ぐ。ラベル語は出さず「人型＋数字」のコンパクトピル。 */
     .cal-event__spots {
       position: absolute;
-      top: 14px;
+      top: 16px;
       right: 16px;
       z-index: 3;
       background: #FFFFFF;
@@ -367,7 +368,7 @@
 
     .cal-event--small {
       min-height: 60px;
-      padding: 12px 16px;
+      padding: 12px;
       --lead: 44px;
     }
 
@@ -390,8 +391,8 @@
     }
 
     .cal-event--small .cal-event__spots {
-      top: 10px;
-      right: 14px;
+      top: 12px;
+      right: 12px;
       font-size: 11px;
       padding: 2px 7px;
     }
@@ -404,7 +405,7 @@
     /* 極短: アイコン列を畳む(--lead:0)。情報密度優先 */
     .cal-event--tiny {
       min-height: 50px;
-      padding: 10px 12px;
+      padding: 10px;
       --lead: 0px;
       column-gap: 0;
     }
@@ -424,7 +425,7 @@
     }
 
     .cal-event--tiny .cal-event__spots {
-      top: 8px;
+      top: 10px;
       right: 10px;
       font-size: 10px;
       padding: 1px 6px;
@@ -438,7 +439,7 @@
     /* 2列重複: 1列Gridにし、アイコンを上段(row1)・本文を下段(row2)に。
        横幅を食わずにアイコンを表示する。 */
     .cal-event--narrow {
-      padding: 12px 12px;
+      padding: 12px;
       --lead: 0px;
       column-gap: 0;
       grid-template-columns: 1fr;
@@ -476,8 +477,8 @@
     }
 
     .cal-event--narrow .cal-event__spots {
-      top: 10px;
-      right: 10px;
+      top: 12px;
+      right: 12px;
       font-size: 11px;
       padding: 2px 7px;
       gap: 3px;
@@ -491,7 +492,7 @@
     /* 3・4列重複: 1列Gridでアイコンを上段に小さく表示。時刻は省く。
        残席は右上コーナー、題は語中折返し可で全幅2行。 */
     .cal-event--very-narrow {
-      padding: 10px 8px;
+      padding: 8px;
       --lead: 0px;
       column-gap: 0;
       grid-template-columns: 1fr;
@@ -548,7 +549,7 @@
       .cal-event {
         --lead: 40px;
         column-gap: 12px;
-        padding: 14px 16px;
+        padding: 14px;
       }
 
       .cal-event__icon {
@@ -575,7 +576,15 @@
       .cal-event--tiny {
         --lead: 0px;
         column-gap: 0;
-        padding: 12px 12px;
+      }
+
+      .cal-event--narrow,
+      .cal-event--tiny {
+        padding: 12px;
+      }
+
+      .cal-event--very-narrow {
+        padding: 8px;
       }
     }
 
