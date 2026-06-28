@@ -202,7 +202,9 @@
       touch-action: manipulation;
       /* 塗り色（active/inactiveで切替）。実際の塗りは ::before が描画 */
       --cal-fill: var(--event-active);
-      --lead: 84px;
+      /* アイコン列幅を画面幅に連動（広い3列では最大84px=1.5x、狭まると縮小）。
+         1024px以下は単日表示(@media)で別途上書き。 */
+      --lead: clamp(60px, 6.6vw, 84px);
     }
 
     /* カードの塗り・角丸・縁取りを ::before に逃がし、inset で上下1.5px後退させる。
@@ -333,6 +335,8 @@
       align-items: flex-start;
       gap: 2px 8px;
       padding-right: 48px;
+      /* 右上バッジぶんの高さを確保し、タイトルが必ずバッジより下から始まるように */
+      min-height: 20px;
     }
 
     .cal-event__time {
@@ -368,11 +372,11 @@
     .cal-event--small {
       min-height: 60px;
       padding: 12px;
-      --lead: 66px;
+      --lead: clamp(48px, 5.2vw, 66px);
     }
 
     .cal-event--small .cal-event__icon {
-      width: 66px;
+      width: var(--lead);
       height: 51px;
       margin-top: 0;
       place-self: center center;
@@ -451,6 +455,7 @@
       grid-row: 1;
       place-self: start start;
       width: 57px;
+      max-width: calc(100% - 50px);
       height: 48px;
       margin-top: 0;
     }
@@ -504,6 +509,7 @@
       grid-row: 1;
       place-self: start start;
       width: 39px;
+      max-width: calc(100% - 28px);
       height: 36px;
       margin-top: 0;
     }
@@ -521,6 +527,7 @@
     .cal-event--narrow .cal-event__head,
     .cal-event--very-narrow .cal-event__head {
       padding-right: 0;
+      min-height: 0;
     }
 
     .cal-event--very-narrow .cal-event__title {
@@ -544,7 +551,7 @@
 
     /* モバイル(単日・全幅): アイコン列を 56→40px に圧縮して題の幅を回復(問題5)。
        長尺の3行は縦長過多防止のため2行へ戻す。重複は --lead:0 のまま題優先。 */
-    @media (max-width: 768px) {
+    @media (max-width: 1023px) {
       .cal-event {
         --lead: 60px;
         column-gap: 12px;
@@ -911,7 +918,7 @@
       display: none;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 1023px) {
       :root {
         --hour-h: 60px;
       }
