@@ -335,7 +335,7 @@
       min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 6px;
+      gap: 2px;
     }
 
     /* head＝時刻のみ（残席は絶対配置でカード右上へ）。右上の残席ぶんの余白を確保して
@@ -457,7 +457,8 @@
     /* 2列重複: 1列Gridにし、アイコンを上段(row1)・本文を下段(row2)に。
        横幅を食わずにアイコンを表示する。 */
     .cal-event--narrow {
-      padding: 12px;
+      /* 重なり時は下パディングを半分(6px)に */
+      padding: 12px 12px 6px;
       --lead: 0px;
       column-gap: 0;
       grid-template-columns: 1fr;
@@ -483,11 +484,15 @@
     .cal-event--narrow.cal-event--small .cal-event__title {
       -webkit-line-clamp: 1;
       line-clamp: 1;
+      /* 1行クランプ時は1行ぶん確保（同尺カードで高さを揃える） */
+      min-height: 1.3em;
     }
 
     .cal-event--narrow .cal-event__title {
       font-size: 13px;
       line-height: 1.3;
+      /* タイトル1行/2行で縦幅が変わらないよう常に2行ぶん確保 */
+      min-height: 2.6em;
     }
 
     .cal-event--narrow .cal-event__time {
@@ -511,7 +516,8 @@
     /* 3・4列重複: 1列Gridでアイコンを上段に小さく表示。時刻は省く。
        残席は右上コーナー、題は語中折返し可で全幅2行。 */
     .cal-event--very-narrow {
-      padding: 8px;
+      /* 重なり時は下パディングを半分(4px)に */
+      padding: 8px 8px 4px;
       --lead: 0px;
       column-gap: 0;
       grid-template-columns: 1fr;
@@ -548,6 +554,8 @@
     .cal-event--very-narrow .cal-event__title {
       font-size: 12px;
       line-height: 1.3;
+      /* タイトル1行/2行で縦幅が変わらないよう常に2行ぶん確保 */
+      min-height: 2.6em;
     }
 
     .cal-event--very-narrow .cal-event__spots {
@@ -599,13 +607,17 @@
         column-gap: 0;
       }
 
-      .cal-event--narrow,
       .cal-event--tiny {
         padding: 12px;
       }
 
+      /* 重なり時は下パディングを半分に */
+      .cal-event--narrow {
+        padding: 12px 12px 6px;
+      }
+
       .cal-event--very-narrow {
-        padding: 8px;
+        padding: 8px 8px 4px;
       }
     }
 
