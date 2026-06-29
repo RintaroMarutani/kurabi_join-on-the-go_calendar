@@ -1105,12 +1105,43 @@
         const mapsContainer = document.getElementById('modal-maps-container');
         const mapsIframe = document.getElementById('modal-maps-iframe');
 
-        if (location && location !== 'Location to be announced') {
-          mapsLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(location);
+        // Google Maps Embed API キー
+        const MAPS_EMBED_KEY = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8';
 
-          // Google Maps Embed URL
-          const embedUrl = 'https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=' + encodeURIComponent(location);
-          mapsIframe.src = embedUrl;
+        // 「Google Mapリンク」列の URL から座標(lat,lng)を取り出す。取れなければ null。
+        // 短縮URL(maps.app.goo.gl)は座標を含まないため null（→名前表示にフォールバック）。
+        const extractMapCoords = (url) => {
+          if (!url) return null;
+          let m = url.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/); // マーカー座標(最優先)
+          if (m) return m[1] + ',' + m[2];
+          m = url.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);          // @lat,lng
+          if (m) return m[1] + ',' + m[2];
+          m = url.match(/[?&](?:q|query)=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/); // q=lat,lng
+          if (m) return m[1] + ',' + m[2];
+          if (/^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/.test(url)) { // 生の "lat,lng"
+            return url.trim().replace(/\s+/g, '');
+          }
+          return null;
+        };
+
+        // 行き先は「Google Mapリンク」列を最優先で使用する。
+        // 集合場所の名前検索は閲覧者の国によって別の場所に解決される(=イタリア誤飛びの原因)ため。
+        const mapLink = String(g(eventData, 'Google Mapリンク') || '').trim();
+        const mapCoords = extractMapCoords(mapLink);
+
+        if (mapLink) {
+          // クリック導線: 列の URL をそのまま使用 → どの国から見ても同じ場所へ
+          mapsLink.href = mapLink;
+          // 埋め込み: 座標が取れれば座標で完全固定。取れなければ(短縮URL)場所名で表示。
+          const embedQuery = mapCoords || location;
+          mapsIframe.src = 'https://www.google.com/maps/embed/v1/place?key=' + MAPS_EMBED_KEY +
+            '&language=en&q=' + encodeURIComponent(embedQuery);
+          mapsContainer.style.display = 'block';
+        } else if (location && location !== 'Location to be announced') {
+          // フォールバック: リンク列が空のときだけ名前検索
+          mapsLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(location);
+          mapsIframe.src = 'https://www.google.com/maps/embed/v1/place?key=' + MAPS_EMBED_KEY +
+            '&language=en&q=' + encodeURIComponent(location);
           mapsContainer.style.display = 'block';
         } else {
           mapsLink.href = '#';
