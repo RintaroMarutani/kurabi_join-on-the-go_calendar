@@ -343,7 +343,8 @@
     .cal-event__head {
       display: flex;
       flex-wrap: wrap;
-      align-items: flex-start;
+      /* 時刻をコンテナ（バッジぶんの高さを確保した行）の中で下揃えにする */
+      align-items: flex-end;
       gap: 2px 8px;
       padding-right: 48px;
       /* 右上バッジぶんの高さを確保し、タイトルが必ずバッジより下から始まるように */
