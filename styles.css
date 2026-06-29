@@ -179,52 +179,76 @@
       z-index: 1;
     }
 
+    /* 全カードを単一の CSS Grid に統一: [アイコン列 --lead | 本文 1fr]。
+       横並び(flex)と縦積み(flex-column)の二系統を廃し、--lead を 56→44→40→0 と縮める
+       だけで横長↔狭幅↔重複を連続表現する。中身は上揃え（開始時刻の真下から始まる）。 */
     .cal-event {
       position: absolute;
       left: 0;
       right: 0;
       box-sizing: border-box;
-      border-top: 2px solid rgba(0,0,0,0.12);
-      background: var(--event-active);
-      padding: 16px 20px;
-      border-radius: 4px;
+      background: transparent;
+      padding: 16px;
       transition: transform 0.2s;
       cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 24px;
+      display: grid;
+      grid-template-columns: var(--lead, 56px) 1fr;
+      column-gap: 20px;
+      align-items: start;
       min-height: 80px;
+      /* パディングは四辺一律（サイズ別に値だけ変える） */
       z-index: 21;
       /* タッチ最適化: 300msの遅延を削減 */
       touch-action: manipulation;
+      /* 塗り色（active/inactiveで切替）。実際の塗りは ::before が描画 */
+      --cal-fill: var(--event-active);
+      /* アイコン列幅を画面幅に連動（1280px以上で最大84px=1.5x、3列が狭まる1024pxへ向け
+         36pxまで縮小し、時刻＋残席バッジ＋本文が必ず収まるようにする）。
+         1024px以下は単日表示(@media)で別途上書き。 */
+      --lead: clamp(36px, calc(18.75vw - 156px), 84px);
     }
 
+    /* カードの塗り・角丸・縁取りを ::before に逃がし、inset で上下1.5px後退させる。
+       これで連続枠（背中合わせ）でも塗り面が接触せず、常に物理ギャップが入る。
+       本体は透明な位置決め/当たり判定ボックスのままなので時刻アラインは不変。 */
+    .cal-event::before {
+      content: '';
+      position: absolute;
+      inset: 1.5px 0;
+      background: var(--cal-fill);
+      border-radius: 8px;
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.28),
+        0 1px 3px rgba(0,0,0,0.18);
+      z-index: -1;
+      pointer-events: none;
+    }
+
+    /* 残席バッジ: サイズ/レイアウトに依らず常にカード右上へ固定。
+       ベストプラクティスに従い position:absolute でフローから外し（要素の並び替えの影響を受けない）、
+       本文側(head)に余白を確保して重なりを防ぐ。ラベル語は出さず「人型＋数字」のコンパクトピル。 */
     .cal-event__spots {
       position: absolute;
-      bottom: 100%;
-      right: 0;
+      top: 16px;
+      right: 16px;
+      transform: translate(4px, -4px);
+      z-index: 3;
       background: #FFFFFF;
       color: var(--color-green);
-      padding: 0 16px;
-      border-radius: 8px 8px 0 0;
-      font-size: 14px;
-      font-weight: 400;
-      display: flex;
+      padding: 2px 8px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      display: inline-flex;
       align-items: center;
-      justify-content: center;
-      gap: 2px;
-      z-index: 22;
+      gap: 4px;
       white-space: nowrap;
       line-height: 1;
-      height: 30px;
-      max-width: calc(100% - 4px);
-      overflow: hidden;
-      text-overflow: ellipsis;
     }
 
     .cal-event__spots svg {
-      width: 20px;
-      height: 20px;
+      width: 14px;
+      height: 14px;
       fill: var(--color-green);
       flex-shrink: 0;
     }
@@ -233,20 +257,36 @@
     @media (min-width: 769px) {
       .cal-event:hover {
         z-index: 1000 !important;
-        transform: scale(1.1);
+        transform: scale(1.06);
       }
 
       .cal-event:hover .cal-event__icon {
         transform: scale(1.2);
       }
 
-      .cal-event:hover:not(.cal-event--inactive) {
+      /* 塗りが ::before に移ったため、hover時の背景変更も ::before に向ける */
+      .cal-event:hover:not(.cal-event--inactive)::before {
         background: #FAA12D;
+      }
+
+      /* hover時は背景のオレンジと連動して残席バッジの文字・アイコンもオレンジに */
+      .cal-event:hover:not(.cal-event--inactive) .cal-event__spots {
+        color: #FAA12D;
+      }
+
+      .cal-event:hover:not(.cal-event--inactive) .cal-event__spots svg {
+        fill: #FAA12D;
       }
     }
 
     .cal-event--inactive {
-      background: var(--event-inactive);
+      --cal-fill: var(--event-inactive);
+    }
+
+    .cal-event--inactive::before {
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.18),
+        0 1px 2px rgba(0,0,0,0.12);
     }
 
     .cal-event--inactive .cal-event__spots {
@@ -267,10 +307,13 @@
       fill: #BEBEBE;
     }
 
+    /* アイコン＝Gridのリード列(col1)。--lead連動の幅・確定高48px。上端頭合わせで題と視覚を揃える。 */
     .cal-event__icon {
-      flex: 1;
-      width: auto;
-      height: 100%;
+      grid-column: 1;
+      place-self: start center;
+      width: var(--lead, 84px);
+      height: 72px;
+      margin-top: 2px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -286,12 +329,38 @@
       fill: white;
     }
 
-    .cal-event__content {
-      flex: 2;
+    /* body＝Grid col2（アイコン無しでも常にcol2）。縦スタック(head上/title下)。 */
+    .cal-event__body {
+      grid-column: 2;
+      min-width: 0;
       display: flex;
       flex-direction: column;
-      gap: 8px;
-      align-self: flex-start;
+      gap: 6px;
+    }
+
+    /* head＝時刻のみ（残席は絶対配置でカード右上へ）。右上の残席ぶんの余白を確保して
+       時刻が下に潜り込まないようにする（横長・短尺カードで有効）。 */
+    .cal-event__head {
+      display: flex;
+      flex-wrap: wrap;
+      /* 時刻をコンテナ（バッジぶんの高さを確保した行）の中で下揃えにする */
+      align-items: flex-end;
+      gap: 2px 8px;
+      padding-right: 48px;
+      /* 右上バッジぶんの高さを確保し、タイトルが必ずバッジより下から始まるように */
+      min-height: 20px;
+    }
+
+    .cal-event__time {
+      font-size: 14px;
+      color: var(--event-text);
+      opacity: 0.9;
+      flex: 0 1 auto;
+      min-width: 0;
+      white-space: nowrap;
+      /* 万一狭くても残席バッジ下へ潜らないよう、はみ出しは省略（通常は収まる） */
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .cal-event__title {
@@ -299,28 +368,40 @@
       font-size: 18px;
       color: var(--event-text);
       line-height: 1.3;
-      order: 2;
+      /* 既定は最大2行で省略（…）。狭幅では語境界以外でも折返して中途半端切れを防ぐ */
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      overflow-wrap: anywhere;
+      word-break: break-word;
     }
 
-    .cal-event__time {
-      font-size: 16px;
-      color: var(--event-text);
-      opacity: 0.9;
-      order: 1;
+    /* 長尺カード(--tall, JS付与)は縦の余りを題の行数(3行)に転化して省略を減らす */
+    .cal-event--tall .cal-event__title {
+      -webkit-line-clamp: 3;
+      line-clamp: 3;
     }
 
     .cal-event--small {
       min-height: 60px;
-      padding: 12px 16px;
+      padding: 12px;
+      --lead: clamp(36px, calc(18.75vw - 156px), 66px);
     }
 
     .cal-event--small .cal-event__icon {
-      width: auto;
-      height: 100%;
+      width: var(--lead);
+      height: 51px;
+      margin-top: 0;
+      place-self: center center;
     }
 
+    /* 高さの低い枠ではタイトルを1行に詰める */
     .cal-event--small .cal-event__title {
       font-size: 12px;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
     }
 
     .cal-event--small .cal-event__time {
@@ -328,28 +409,33 @@
     }
 
     .cal-event--small .cal-event__spots {
-      font-size: 12px;
-      padding: 0 12px;
+      top: 12px;
+      right: 12px;
+      font-size: 11px;
+      padding: 2px 7px;
     }
 
     .cal-event--small .cal-event__spots svg {
-      width: 16px;
-      height: 16px;
+      width: 13px;
+      height: 13px;
     }
 
+    /* 極短: アイコン列を畳む(--lead:0)。情報密度優先 */
     .cal-event--tiny {
       min-height: 50px;
-      padding: 10px 12px;
-      gap: 12px;
+      padding: 10px;
+      --lead: 0px;
+      column-gap: 0;
     }
 
     .cal-event--tiny .cal-event__icon {
-      width: auto;
-      height: 100%;
+      display: none;
     }
 
     .cal-event--tiny .cal-event__title {
       font-size: 11px;
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
     }
 
     .cal-event--tiny .cal-event__time {
@@ -357,30 +443,46 @@
     }
 
     .cal-event--tiny .cal-event__spots {
-      font-size: 11px;
-      padding: 0 10px;
+      top: 10px;
+      right: 10px;
+      font-size: 10px;
+      padding: 1px 6px;
     }
 
     .cal-event--tiny .cal-event__spots svg {
-      width: 14px;
-      height: 14px;
+      width: 12px;
+      height: 12px;
     }
 
+    /* 2列重複: 1列Gridにし、アイコンを上段(row1)・本文を下段(row2)に。
+       横幅を食わずにアイコンを表示する。 */
     .cal-event--narrow {
-      padding: 12px 14px;
-      gap: 8px;
-      flex-direction: column;
-      align-items: flex-start;
-      text-align: left;
+      padding: 12px;
+      --lead: 0px;
+      column-gap: 0;
+      grid-template-columns: 1fr;
+      row-gap: 4px;
     }
 
     .cal-event--narrow .cal-event__icon {
-      width: 50%;
-      height: 100%;
+      display: flex;
+      grid-column: 1;
+      grid-row: 1;
+      place-self: start start;
+      width: 57px;
+      max-width: calc(100% - 50px);
+      height: 48px;
+      margin-top: 0;
     }
 
-    .cal-event--narrow .cal-event__content {
-      align-items: flex-start;
+    .cal-event--narrow .cal-event__body {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .cal-event--narrow.cal-event--small .cal-event__title {
+      -webkit-line-clamp: 1;
+      line-clamp: 1;
     }
 
     .cal-event--narrow .cal-event__title {
@@ -394,33 +496,53 @@
     }
 
     .cal-event--narrow .cal-event__spots {
-      font-size: 12px;
-      padding: 0 12px;
-      left: 50%;
-      right: auto;
-      transform: translateX(-50%);
+      top: 12px;
+      right: 12px;
+      font-size: 11px;
+      padding: 2px 7px;
+      gap: 3px;
     }
 
     .cal-event--narrow .cal-event__spots svg {
-      width: 16px;
-      height: 16px;
+      width: 13px;
+      height: 13px;
     }
 
+    /* 3・4列重複: 1列Gridでアイコンを上段に小さく表示。時刻は省く。
+       残席は右上コーナー、題は語中折返し可で全幅2行。 */
     .cal-event--very-narrow {
-      padding: 10px 8px;
-      gap: 6px;
-      flex-direction: column;
-      align-items: flex-start;
-      text-align: left;
+      padding: 8px;
+      --lead: 0px;
+      column-gap: 0;
+      grid-template-columns: 1fr;
+      row-gap: 3px;
     }
 
     .cal-event--very-narrow .cal-event__icon {
-      width: auto;
-      height: 100%;
+      display: flex;
+      grid-column: 1;
+      grid-row: 1;
+      place-self: start start;
+      width: 39px;
+      max-width: calc(100% - 28px);
+      height: 36px;
+      margin-top: 0;
     }
 
-    .cal-event--very-narrow .cal-event__content {
-      align-items: flex-start;
+    .cal-event--very-narrow .cal-event__body {
+      grid-column: 1;
+      grid-row: 2;
+    }
+
+    .cal-event--very-narrow .cal-event__time {
+      display: none;
+    }
+
+    /* 狭幅カードは残席が上段(行1)の右上に絶対配置されるため、head(時刻)側の右余白は不要 */
+    .cal-event--narrow .cal-event__head,
+    .cal-event--very-narrow .cal-event__head {
+      padding-right: 0;
+      min-height: 0;
     }
 
     .cal-event--very-narrow .cal-event__title {
@@ -428,22 +550,63 @@
       line-height: 1.3;
     }
 
-    .cal-event--very-narrow .cal-event__time {
-      font-size: 10px;
-      line-height: 1.3;
-    }
-
     .cal-event--very-narrow .cal-event__spots {
-      font-size: 10px;
-      padding: 0 8px;
-      left: 50%;
-      right: auto;
-      transform: translateX(-50%);
+      top: 8px;
+      right: 8px;
+      font-size: 11px;
+      padding: 2px 6px;
+      gap: 2px;
     }
 
+    /* 3・4列の極狭カードは残席を数字のみ(人型SVG非表示)に縮小し、上段左のアイコンと
+       右上バッジが横で衝突しないようにする（意味は aria-label で担保）。 */
     .cal-event--very-narrow .cal-event__spots svg {
-      width: 14px;
-      height: 14px;
+      display: none;
+    }
+
+    /* モバイル(単日・全幅): アイコン列を 56→40px に圧縮して題の幅を回復(問題5)。
+       長尺の3行は縦長過多防止のため2行へ戻す。重複は --lead:0 のまま題優先。 */
+    @media (max-width: 1023px) {
+      .cal-event {
+        --lead: 60px;
+        column-gap: 12px;
+        padding: 14px;
+      }
+
+      .cal-event__icon {
+        width: 60px;
+        height: 51px;
+      }
+
+      .cal-event__title {
+        font-size: 16px;
+      }
+
+      .cal-event--tall .cal-event__title {
+        -webkit-line-clamp: 2;
+        line-clamp: 2;
+      }
+
+      .cal-event--small {
+        --lead: 60px;
+      }
+
+      /* 重複(狭幅)はモバイルでもアイコン列を畳む。上の .cal-event{--lead:40px} を打ち消す */
+      .cal-event--narrow,
+      .cal-event--very-narrow,
+      .cal-event--tiny {
+        --lead: 0px;
+        column-gap: 0;
+      }
+
+      .cal-event--narrow,
+      .cal-event--tiny {
+        padding: 12px;
+      }
+
+      .cal-event--very-narrow {
+        padding: 8px;
+      }
     }
 
     .modal-overlay {
@@ -770,7 +933,7 @@
       display: none;
     }
 
-    @media (max-width: 768px) {
+    @media (max-width: 1023px) {
       :root {
         --hour-h: 60px;
       }

@@ -608,7 +608,7 @@
 
           const topPercent = clamp((mins / totalMins) * 100, 0, 100);
           const heightPercent = Math.max((dur / totalMins) * 100, 3);
-          const safeHeightPercent = Math.max(1, Math.min(heightPercent, 100 - topPercent - 0.2));
+          const safeHeightPercent = Math.max(1, Math.min(heightPercent, 100 - topPercent - 0.6));
 
           const card = document.createElement('div');
           let className = 'cal-event';
@@ -617,6 +617,9 @@
             className += ' cal-event--tiny';
           } else if (safeHeightPercent < 5) {
             className += ' cal-event--small';
+          } else if (safeHeightPercent >= 15) {
+            // 長尺カード: 縦に余裕があるので題を3行まで表示（--tall）
+            className += ' cal-event--tall';
           }
 
           const title = g(ev, 'タイトル') || '';
@@ -649,19 +652,21 @@
 
           let spotsHtml = '';
           if (remainingSpots !== undefined && remainingSpots !== null && remainingSpots !== '') {
-            spotsHtml = '<div class="cal-event__spots">' +
-            'Remaining spots: ' + escapeHTML(remainingSpots) +
-            '<svg viewBox="0 0 24 24">' +
+            spotsHtml = '<div class="cal-event__spots" aria-label="Remaining spots: ' + escapeHTML(remainingSpots) + '">' +
+            '<svg viewBox="0 0 24 24" aria-hidden="true">' +
               '<path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>' +
             '</svg>' +
+            '<span class="spots-num">' + escapeHTML(remainingSpots) + '</span>' +
           '</div>';
           }
 
-          card.innerHTML = spotsHtml +
-        iconHtml +
-        '<div class="cal-event__content">' +
+          card.innerHTML = iconHtml +
+        '<div class="cal-event__body">' +
+          '<div class="cal-event__head">' +
+            '<div class="cal-event__time">' + escapeHTML(timeStr) + '</div>' +
+            spotsHtml +
+          '</div>' +
           '<div class="cal-event__title">' + escapeHTML(title) + '</div>' +
-          '<div class="cal-event__time">' + escapeHTML(timeStr) + '</div>' +
         '</div>';
 
           card.addEventListener('click', () => {
@@ -1100,12 +1105,43 @@
         const mapsContainer = document.getElementById('modal-maps-container');
         const mapsIframe = document.getElementById('modal-maps-iframe');
 
-        if (location && location !== 'Location to be announced') {
-          mapsLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(location);
+        // Google Maps Embed API キー
+        const MAPS_EMBED_KEY = 'AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8';
 
-          // Google Maps Embed URL
-          const embedUrl = 'https://www.google.com/maps/embed/v1/place?key=AIzaSyBFw0Qbyq9zTFTd-tUY6dZWTgaQzuU17R8&q=' + encodeURIComponent(location);
-          mapsIframe.src = embedUrl;
+        // 「Google Mapリンク」列の URL から座標(lat,lng)を取り出す。取れなければ null。
+        // 短縮URL(maps.app.goo.gl)は座標を含まないため null（→名前表示にフォールバック）。
+        const extractMapCoords = (url) => {
+          if (!url) return null;
+          let m = url.match(/!3d(-?\d+(?:\.\d+)?)!4d(-?\d+(?:\.\d+)?)/); // マーカー座標(最優先)
+          if (m) return m[1] + ',' + m[2];
+          m = url.match(/@(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/);          // @lat,lng
+          if (m) return m[1] + ',' + m[2];
+          m = url.match(/[?&](?:q|query)=(-?\d+(?:\.\d+)?),(-?\d+(?:\.\d+)?)/); // q=lat,lng
+          if (m) return m[1] + ',' + m[2];
+          if (/^\s*-?\d+(?:\.\d+)?\s*,\s*-?\d+(?:\.\d+)?\s*$/.test(url)) { // 生の "lat,lng"
+            return url.trim().replace(/\s+/g, '');
+          }
+          return null;
+        };
+
+        // 行き先は「Google Mapリンク」列を最優先で使用する。
+        // 集合場所の名前検索は閲覧者の国によって別の場所に解決される(=イタリア誤飛びの原因)ため。
+        const mapLink = String(g(eventData, 'Google Mapリンク') || '').trim();
+        const mapCoords = extractMapCoords(mapLink);
+
+        if (mapLink) {
+          // クリック導線: 列の URL をそのまま使用 → どの国から見ても同じ場所へ
+          mapsLink.href = mapLink;
+          // 埋め込み: 座標が取れれば座標で完全固定。取れなければ(短縮URL)場所名で表示。
+          const embedQuery = mapCoords || location;
+          mapsIframe.src = 'https://www.google.com/maps/embed/v1/place?key=' + MAPS_EMBED_KEY +
+            '&language=en&q=' + encodeURIComponent(embedQuery);
+          mapsContainer.style.display = 'block';
+        } else if (location && location !== 'Location to be announced') {
+          // フォールバック: リンク列が空のときだけ名前検索
+          mapsLink.href = 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(location);
+          mapsIframe.src = 'https://www.google.com/maps/embed/v1/place?key=' + MAPS_EMBED_KEY +
+            '&language=en&q=' + encodeURIComponent(location);
           mapsContainer.style.display = 'block';
         } else {
           mapsLink.href = '#';
