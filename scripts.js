@@ -17,26 +17,44 @@
         }
       } catch (_) {}
 
-      // データ取得関数
-      const _fetchData = (url, opts) => fetch(url, opts)
-        .then(res => {
-          if (!res.ok) throw new Error(res.status);
-          return res.json();
-        })
-        .then(json => {
-          const data = (json && Array.isArray(json.data)) ? json.data : [];
-          try {
-            localStorage.setItem(CACHE_KEY, JSON.stringify(data));
-            localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
-          } catch (_) {}
-          return data;
-        });
+      // 当日（JST）を YYYY/MM/DD で。開催日も同形式（ゼロ埋め）なので文字列比較が日付比較になる
+      const _todayJST = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Tokyo', year: 'numeric', month: '2-digit', day: '2-digit'
+      }).format(new Date()).replace(/-/g, '/');
 
-      // 静的JSONを優先（CDNキャッシュ活用）、失敗時はGAS APIにフォールバック
-      const _fetchPromise = (STATIC_JSON_URL
-        ? _fetchData(STATIC_JSON_URL, {}).catch(() => _fetchData(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' }))
-        : _fetchData(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' })
-      ).catch(() => null);
+      // 「今日以降の開催日」を持つイベントが1件でもあるか（＝データが新鮮か）
+      const _hasFutureEvent = (data) => Array.isArray(data) && data.some(ev => {
+        const d = ev && ev['開催日'];
+        return typeof d === 'string' && d >= _todayJST;
+      });
+
+      // 取得（生JSON → data配列）
+      const _rawFetch = (url, opts) => fetch(url, opts).then(res => {
+        if (!res.ok) throw new Error(res.status);
+        return res.json();
+      }).then(json => (json && Array.isArray(json.data)) ? json.data : []);
+
+      const _saveCache = (data) => {
+        try {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(data));
+          localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+        } catch (_) {}
+      };
+
+      // 静的JSON（GitHub Pages）を優先。ただし今日以降のイベントが無い場合は、
+      // Pages配信の陳腐化（古いJSONを200で返す故障）または純粋な空とみなし、GAS APIで取り直す。
+      // 「静的が古いまま」でもカレンダーが最新を表示できるようにする単一障害点の除去。
+      const _fetchPromise = (async () => {
+        if (STATIC_JSON_URL) {
+          try {
+            const staticData = await _rawFetch(STATIC_JSON_URL, {});
+            if (_hasFutureEvent(staticData)) { _saveCache(staticData); return staticData; }
+          } catch (_) { /* 静的取得失敗 → API へフォールバック */ }
+        }
+        const apiData = await _rawFetch(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' });
+        _saveCache(apiData);
+        return apiData;
+      })().catch(() => null);
 
       const HOUR_H = 60;
       const tz = 'Asia/Tokyo';
@@ -534,8 +552,9 @@
 
       // キャッシュがあれば即座に使用、なければfetchを待つ
       let items = [];
-      if (_cachedItems && _cachedItems.length > 0) {
-        // キャッシュヒット: 即座に表示（ローディング解除）
+      if (_cachedItems && _cachedItems.length > 0 && _hasFutureEvent(_cachedItems)) {
+        // 新鮮なキャッシュヒット: 即座に表示（ローディング解除）。
+        // 古い（今日以降のイベントが無い）キャッシュは使わず、下の fetch で取り直す。
         items = _cachedItems;
         if (loading.parentNode) loading.parentNode.removeChild(loading);
       } else {

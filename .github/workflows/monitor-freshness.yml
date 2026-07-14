@@ -1,0 +1,44 @@
+name: Monitor events.json freshness
+
+# 公開中の events.json が「今日以降のイベントを含むか」を毎時チェックする。
+# 含まなければ配信が陳腐化している（デプロイ枯渇など）と判断し、ジョブを失敗させて
+# リポジトリ管理者へ GitHub 標準の失敗通知メールを飛ばす。
+# schedule トリガーのみなので、events.json のコミットや Pages デプロイには一切干渉しない。
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # 毎時0分（UTC）
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch published events.json and verify freshness
+        shell: bash
+        env:
+          RUN_ID: ${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          URL="https://calendar.kurabi-japan.com/events.json?cb=${RUN_ID}"
+          echo "Fetching: $URL"
+          curl -sfL "$URL" -o events.json
+          python3 - <<'PY'
+          import json, datetime, sys
+          d = json.load(open('events.json'))
+          data = d.get('data', [])
+          today = (datetime.datetime.now(datetime.timezone.utc)
+                   + datetime.timedelta(hours=9)).strftime('%Y/%m/%d')
+          dates = sorted({e.get('開催日') for e in data if e.get('開催日')})
+          future = [x for x in dates if x >= today]
+          print("today(JST)       =", today)
+          print("published dates  =", dates)
+          if not future:
+              print(f"::error::Published events.json is STALE — no events on/after {today}. "
+                    "The deploy pipeline is likely stuck (inspect the 'Deploy to GitHub Pages' runs).")
+              sys.exit(1)
+          print(f"OK: {len(future)} future date(s) published.")
+          PY
