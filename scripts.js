@@ -28,11 +28,35 @@
         return typeof d === 'string' && d >= _todayJST;
       });
 
-      // 取得（生JSON → data配列）
-      const _rawFetch = (url, opts) => fetch(url, opts).then(res => {
-        if (!res.ok) throw new Error(res.status);
-        return res.json();
-      }).then(json => (json && Array.isArray(json.data)) ? json.data : []);
+      // 1回分の取得（生JSON → data配列）。無反応のまま待ち続けないようタイムアウトを付ける
+      const _fetchOnce = (url, opts, timeoutMs) => {
+        const ctrl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timer = ctrl ? setTimeout(() => ctrl.abort(), timeoutMs) : null;
+        const req = ctrl ? Object.assign({}, opts, { signal: ctrl.signal }) : opts;
+        return fetch(url, req).then(res => {
+          if (!res.ok) throw new Error(res.status);
+          return res.json();
+        }).then(json => (json && Array.isArray(json.data)) ? json.data : [])
+          .finally(() => { if (timer) clearTimeout(timer); });
+      };
+
+      const _sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+      // 取得（リトライ付き）。GAS の Web アプリは実行が重いと Google 側が 404 を返す
+      // （実測で2割前後、いずれも数十秒待たされた後）。一過性の故障なので、諦める前に
+      // 間隔を空けて試す。ここで諦めると静的JSONが古いときにカレンダーを出せなくなる。
+      const _rawFetch = async (url, opts, tries = 1, waitMs = 2000, timeoutMs = 30000) => {
+        let lastError;
+        for (let i = 1; i <= tries; i++) {
+          try {
+            return await _fetchOnce(url, opts, timeoutMs);
+          } catch (e) {
+            lastError = e;
+            if (i < tries) await _sleep(waitMs);
+          }
+        }
+        throw lastError;
+      };
 
       const _saveCache = (data) => {
         try {
@@ -51,7 +75,8 @@
             if (_hasFutureEvent(staticData)) { _saveCache(staticData); return staticData; }
           } catch (_) { /* 静的取得失敗 → API へフォールバック */ }
         }
-        const apiData = await _rawFetch(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' });
+        // 静的JSONが使えないときの最後の砦なので、GAS の間欠404をまたぐまで試す
+        const apiData = await _rawFetch(API_ENDPOINT, { cache: 'no-cache', mode: 'cors' }, 3);
         _saveCache(apiData);
         return apiData;
       })().catch(() => null);
