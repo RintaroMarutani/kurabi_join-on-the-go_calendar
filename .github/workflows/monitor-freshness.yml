@@ -11,6 +11,16 @@ name: Monitor events.json freshness
 #
 # 反映には GAS トリガー(10分間隔)＋デプロイの時間差があるため、不一致時は間隔を空けて再確認し、
 # 伝播待ちによる誤検知を避ける。
+#
+# 取得リトライについて:
+#   GAS の Web アプリは実行が重いと Google 側が 404 を返す（実測で 2割前後、必ず数十秒待たされた後）。
+#   一過性なので取得単位でもリトライする。1回の 404 で fail させると監視がオオカミ少年になり、
+#   本物の障害（下の自動再デプロイ）が埋もれる。
+#
+# 自動復旧について:
+#   不一致が確定したら Pages デプロイを再実行する。デプロイは通常 events.json が変わる
+#   タイミング（1日1回）しか走らないため、1度失敗すると次の変更まで公開物が古いまま残る。
+#   実際 2026-08-17 のデプロイ失敗では約8時間50分、古い JSON が配信され続けた。
 
 on:
   schedule:
@@ -19,13 +29,15 @@ on:
 
 permissions:
   contents: read
+  actions: write          # 不一致時に Deploy to GitHub Pages を再実行するため
 
 jobs:
   check:
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 45
     steps:
       - name: Compare published events.json against the source API
+        id: compare
         shell: bash
         env:
           API_ENDPOINT: https://script.google.com/macros/s/AKfycbx8sv9TegLDV3F-hscGKKX_oJra3zzgtVqyickaRallZRlceXjA67V2i_oRI0FY-NWd/exec
@@ -39,11 +51,31 @@ jobs:
           PUB = os.environ['PUBLISHED_URL']
           ATTEMPTS = 3          # 不一致時の再確認回数
           WAIT_SEC = 300        # 再確認までの待ち（GASトリガー10分間隔をまたぐため）
+          FETCH_TRIES = 3       # 1回の取得あたりのリトライ回数（GASの間欠404対策）
+          FETCH_WAIT = 10       # 取得リトライの間隔
+          TIMEOUT = 60          # 1リクエストの上限（GASはキャッシュミス時に数十秒かかる）
 
-          def get(url):
-              req = urllib.request.Request(url, headers={'Cache-Control': 'no-cache'})
-              with urllib.request.urlopen(req, timeout=60) as r:
-                  return json.loads(r.read().decode('utf-8'))
+          def emit(name, value):
+              """後続ステップに渡す出力"""
+              with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
+                  fh.write(f'{name}={value}\n')
+
+          def get(url, label):
+              sep = '&' if '?' in url else '?'
+              last = None
+              for i in range(1, FETCH_TRIES + 1):
+                  try:
+                      req = urllib.request.Request(
+                          f'{url}{sep}cb={int(time.time())}',
+                          headers={'Cache-Control': 'no-cache'})
+                      with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+                          return json.loads(r.read().decode('utf-8'))
+                  except Exception as e:
+                      last = e
+                      print(f'  [{label}] fetch {i}/{FETCH_TRIES} failed: {e}')
+                      if i < FETCH_TRIES:
+                          time.sleep(FETCH_WAIT)
+              raise last
 
           def norm(payload):
               """比較用に data 配列だけを正規化した文字列にする"""
@@ -51,9 +83,9 @@ jobs:
 
           for attempt in range(1, ATTEMPTS + 1):
               try:
-                  api = get(API)
+                  api = get(API, 'source')
               except Exception as e:
-                  print(f"::error::Source API unreachable: {e}")
+                  print(f"::error::Source API unreachable after {FETCH_TRIES} tries: {e}")
                   sys.exit(1)
 
               if api.get('success') is not True:
@@ -61,9 +93,9 @@ jobs:
                   sys.exit(1)
 
               try:
-                  pub = get(PUB + f'?cb={int(time.time())}')
+                  pub = get(PUB, 'published')
               except Exception as e:
-                  print(f"::error::Published events.json unreachable: {e}")
+                  print(f"::error::Published events.json unreachable after {FETCH_TRIES} tries: {e}")
                   sys.exit(1)
 
               if norm(api) == norm(pub):
@@ -76,8 +108,24 @@ jobs:
                   print(f"  waiting {WAIT_SEC}s for propagation...")
                   time.sleep(WAIT_SEC)
 
+          emit('redeploy', 'true')
           print("::error::Published events.json does NOT match the source after retries. "
-                "The pipeline is likely stuck — check the 'Deploy to GitHub Pages' runs "
-                "(concurrency group must be 'pages-deploy') and the GAS prewarmCache trigger.")
+                "Triggering a Pages redeploy to recover. If this repeats, check the GAS "
+                "prewarmCache trigger and the 'Deploy to GitHub Pages' runs "
+                "(concurrency group must be 'pages-deploy').")
           sys.exit(1)
           PY
+
+      # 公開物が古いと確定した場合の自己修復。デプロイは events.json の変更でしか
+      # 走らないため、ここで蹴らないと次の変更（最長で翌日）まで古いまま残る。
+      - name: Redeploy GitHub Pages (self-heal)
+        if: always() && steps.compare.outputs.redeploy == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh workflow run deploy-pages.yml --ref main --repo "$GITHUB_REPOSITORY"; then
+            echo "Triggered 'Deploy to GitHub Pages' to republish the stale events.json."
+          else
+            echo "::warning::Could not trigger the redeploy — run 'Deploy to GitHub Pages' manually."
+            echo "  権限で弾かれている場合は Settings > Actions > Workflow permissions を確認する。"
+          fi

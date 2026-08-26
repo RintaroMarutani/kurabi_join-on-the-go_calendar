@@ -46,3 +46,8 @@ jobs:
 
       - id: deployment
         uses: actions/deploy-pages@v4
+        with:
+          # Pages 側の反映が遅れると既定の10分で打ち切られる
+          # (2026-08-06 の "Timeout reached, aborting!" がこれ)。
+          # 待ち時間を伸ばして取りこぼしを減らす。
+          timeout: 1200000
